@@ -1,0 +1,16 @@
+# Qdrant Vector Database Settings
+
+url: ${QDRANT_URL}
+api_key: ${QDRANT_API_KEY}
+
+collection:
+  name: ${QDRANT_COLLECTION}
+  vector_size: 384
+  distance: Cosine
+  
+  # Embedding model (sentence-transformers)
+  embedding_model: all-MiniLM-L6-v2
+
+# Batch processing
+batch_size: 100
+

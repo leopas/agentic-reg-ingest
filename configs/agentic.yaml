@@ -1,0 +1,29 @@
+# Agentic Search Configuration
+# Plan→Act→Observe→Judge→Re-plan loop settings
+
+agentic:
+  # Default stop conditions
+  default_stop:
+    min_approved: 12           # Minimum approved documents to collect
+    max_iterations: 3          # Maximum loop iterations
+    max_queries_per_iter: 2    # Max queries to execute per iteration
+  
+  # Default quality gates
+  default_quality:
+    must_types: ["html","pdf"] # Allowed document types (pdf, zip, html)
+    max_age_years: 3           # Maximum document age in years
+    min_anchor_signals: 0      # Minimum structural markers (Art., Anexo, etc.)
+    min_score: 2.0             # Minimum scoring threshold (0-5 scale, weighted sum)
+  
+  # Resource budget
+  budget:
+    max_cse_calls: 10          # Maximum Google CSE API calls per plan
+    ttl_days: ${TTL_DAYS}      # Cache TTL in days
+  
+  # LLM settings for planner and judge
+  llm:
+    model: gpt-4o-mini
+    temperature: 0             # Deterministic for consistency
+    max_tokens: 3000
+    timeout: ${REQUEST_TIMEOUT_SECONDS}
+

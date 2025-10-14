@@ -1,0 +1,23 @@
+# Database Configuration
+# Uses ${VAR} placeholders resolved from environment variables
+
+host: ${MYSQL_HOST}
+port: ${MYSQL_PORT}
+database: ${MYSQL_DB}
+user: ${MYSQL_USER}
+password: ${MYSQL_PASSWORD}
+ssl_ca: ${MYSQL_SSL_CA}
+
+# Connection pool settings
+pool_size: 5
+max_overflow: 10
+pool_timeout: 30
+pool_recycle: 3600
+
+# Query settings
+echo: false
+echo_pool: false
+
+# Cache TTL
+ttl_days: ${TTL_DAYS}
+

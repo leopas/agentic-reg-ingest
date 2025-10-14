@@ -1,0 +1,45 @@
+{
+  "goal": "Buscar APENAS PDFs oficiais da ANS (RNs publicadas no DOU), com máxima qualidade",
+  "topics": [
+    "resoluções normativas",
+    "anexos técnicos"
+  ],
+  "queries": [
+    {
+      "q": "RN ANS site:www.in.gov.br",
+      "why": "Buscar no Diário Oficial",
+      "k": 10
+    },
+    {
+      "q": "Resolução Normativa ANS filetype:pdf",
+      "why": "Forçar PDFs",
+      "k": 10
+    }
+  ],
+  "allow_domains": [
+    "www.in.gov.br",
+    "www.planalto.gov.br"
+  ],
+  "deny_patterns": [
+    ".*www\\.gov\\.br\\/ans.*",
+    ".*noticia.*",
+    ".*blog.*"
+  ],
+  "stop": {
+    "min_approved": 20,
+    "max_iterations": 5,
+    "max_queries_per_iter": 2
+  },
+  "quality_gates": {
+    "must_types": [
+      "pdf"
+    ],
+    "max_age_years": 2,
+    "min_anchor_signals": 0,
+    "min_score": 3.5
+  },
+  "budget": {
+    "max_cse_calls": 100,
+    "ttl_days": 30
+  }
+}

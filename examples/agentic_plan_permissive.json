@@ -1,0 +1,56 @@
+{
+  "goal": "Buscar Resoluções Normativas da ANS sobre prazos máximos de atendimento e cobertura obrigatória",
+  "topics": [
+    "prazos máximos de atendimento",
+    "cobertura obrigatória",
+    "rol de procedimentos"
+  ],
+  "queries": [
+    {
+      "q": "RN ANS prazos máximos atendimento",
+      "why": "Query principal sobre prazos",
+      "k": 10
+    },
+    {
+      "q": "Resolução Normativa ANS cobertura obrigatória",
+      "why": "Regras de cobertura",
+      "k": 10
+    },
+    {
+      "q": "RN 259 ANS rol procedimentos",
+      "why": "Lista de procedimentos cobertos",
+      "k": 8
+    }
+  ],
+  "allow_domains": [
+    "www.gov.br/ans",
+    "www.planalto.gov.br",
+    "www.in.gov.br",
+    "bvsms.saude.gov.br"
+  ],
+  "deny_patterns": [
+    ".*\\/blog\\/.*",
+    ".*facebook.*",
+    ".*twitter.*",
+    ".*instagram.*",
+    ".*youtube\\.com.*"
+  ],
+  "stop": {
+    "min_approved": 12,
+    "max_iterations": 3,
+    "max_queries_per_iter": 2
+  },
+  "quality_gates": {
+    "must_types": [
+      "pdf",
+      "zip"
+    ],
+    "max_age_years": 3,
+    "min_anchor_signals": 1,
+    "min_score": 1.8
+  },
+  "budget": {
+    "max_cse_calls": 60,
+    "ttl_days": 7
+  }
+}

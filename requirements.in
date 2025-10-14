@@ -1,0 +1,42 @@
+# Web Framework
+fastapi
+uvicorn[standard]
+
+# HTTP Client
+requests
+httpx
+
+# Data & Config
+PyYAML
+pydantic-settings
+python-dotenv
+
+# Logging & Utilities
+structlog
+tenacity
+tqdm
+
+# Database
+sqlalchemy
+pymysql
+cryptography
+
+# PDF Processing
+pdfplumber
+pypdf
+
+# AI/LLM
+openai
+
+# Vector DB (optional)
+qdrant-client
+
+# Development Tools
+ruff
+black
+mypy
+pytest
+pytest-asyncio
+types-PyYAML
+types-requests
+

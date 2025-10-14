@@ -1,0 +1,54 @@
+{
+    "goal": "Buscar páginas HTML sobre falhas de TI, dívidas técnicas e ineficiências na saúde suplementar",
+    "topics": [
+        "tecnologia da informação",
+        "dívidas técnicas",
+        "ineficiências operacionais",
+        "custos de TI"
+    ],
+    "queries": [
+        {
+            "q": "falhas tecnologia informação saúde suplementar",
+            "why": "Identificar problemas de TI no setor",
+            "k": 10
+        },
+        {
+            "q": "dívidas técnicas saúde suplementar custos",
+            "why": "Mapear débitos tecnológicos e impactos financeiros",
+            "k": 8
+        },
+        {
+            "q": "ineficiências TI operadoras planos saúde",
+            "why": "Encontrar cases de ineficiência operacional",
+            "k": 8
+        }
+    ],
+    "allow_domains": [
+        "www.gov.br/ans",
+        "www.gov.br",
+        "bvsms.saude.gov.br"
+    ],
+    "deny_patterns": [
+        ".*facebook.*",
+        ".*twitter.*",
+        ".*linkedin.*",
+        ".*youtube\\.com.*"
+    ],
+    "stop": {
+        "min_approved": 10,
+        "max_iterations": 3,
+        "max_queries_per_iter": 2
+    },
+    "quality_gates": {
+        "must_types": [
+            "html"
+        ],
+        "max_age_years": 5,
+        "min_anchor_signals": 0,
+        "min_score": 1.5
+    },
+    "budget": {
+        "max_cse_calls": 60,
+        "ttl_days": 7
+    }
+}

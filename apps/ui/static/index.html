@@ -1,0 +1,986 @@
+<!doctype html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="utf-8" />
+    <title>Agentic Search Console</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: system-ui, 'Segoe UI', Roboto, Arial, sans-serif;
+            margin: 0;
+            background: #0b0f14;
+            color: #e6e6e6;
+        }
+
+        header {
+            padding: 16px 24px;
+            background: #0f1720;
+            border-bottom: 1px solid #1f2937;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 1.5rem;
+        }
+
+        .subtitle {
+            color: #94a3b8;
+            font-size: 0.9rem;
+            margin-top: 4px;
+        }
+
+        main {
+            display: grid;
+            gap: 16px;
+            padding: 16px;
+            grid-template-columns: 1.2fr 1fr;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        @media (max-width: 1024px) {
+            main {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        h2 {
+            margin: 0.2rem 0 0.8rem 0;
+            font-size: 1.1rem;
+            color: #60a5fa;
+        }
+
+        .card {
+            background: #0f1720;
+            border: 1px solid #1f2937;
+            border-radius: 12px;
+            padding: 16px;
+        }
+
+        textarea,
+        input,
+        select,
+        pre {
+            width: 100%;
+            background: #0b0f14;
+            color: #e6e6e6;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 10px;
+            font-family: inherit;
+        }
+
+        textarea {
+            font-family: ui-monospace, 'SF Mono', Consolas, monospace;
+            font-size: 0.85rem;
+        }
+
+        pre {
+            font-size: 0.8rem;
+            overflow-x: auto;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        button {
+            background: #2563eb;
+            border: none;
+            color: #fff;
+            padding: 10px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #1d4ed8;
+        }
+
+        button.secondary {
+            background: #374151;
+        }
+
+        button.secondary:hover {
+            background: #4b5563;
+        }
+
+        button.danger {
+            background: #dc2626;
+        }
+
+        button.danger:hover {
+            background: #b91c1c;
+        }
+
+        button:disabled {
+            background: #374151;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        button.tiny {
+            padding: 4px 8px;
+            font-size: 0.75rem;
+            margin-left: 4px;
+        }
+
+        button.tiny.secondary {
+            background: #475569;
+        }
+
+        button.tiny.secondary:hover {
+            background: #64748b;
+        }
+
+        .row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .muted {
+            color: #94a3b8;
+        }
+
+        .grid {
+            display: grid;
+            gap: 8px;
+        }
+
+        .small {
+            font-size: 0.9rem;
+        }
+
+        .tiny {
+            font-size: 0.75rem;
+        }
+
+        .kbd {
+            font-family: ui-monospace, 'SF Mono', Consolas, monospace;
+            font-size: 0.85rem;
+            background: #1f2937;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .ok {
+            color: #22c55e;
+        }
+
+        .warn {
+            color: #f59e0b;
+        }
+
+        .err {
+            color: #ef4444;
+        }
+
+        .info {
+            color: #60a5fa;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge.ok {
+            background: #065f46;
+            color: #6ee7b7;
+        }
+
+        .badge.warn {
+            background: #78350f;
+            color: #fde047;
+        }
+
+        .badge.err {
+            background: #7f1d1d;
+            color: #fca5a5;
+        }
+
+        .iter-card {
+            background: #1f2937;
+            border-left: 3px solid #2563eb;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+        }
+
+        .iter-header {
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .url-list {
+            list-style: none;
+            padding: 0;
+            margin: 8px 0;
+        }
+
+        .url-list li {
+            padding: 4px 0;
+            font-size: 0.85rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .url-list a {
+            color: #60a5fa;
+            text-decoration: none;
+        }
+
+        .url-list a:hover {
+            text-decoration: underline;
+        }
+
+        .config-panel {
+            background: #1f2937;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 12px;
+        }
+
+        .toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 8px 0;
+        }
+
+        .toggle input[type="checkbox"] {
+            width: auto;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid #374151;
+            border-top-color: #60a5fa;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>🤖 Agentic Search Console</h1>
+        <div class="subtitle">Plan → Act → Observe → Judge → Re-plan | v2.0</div>
+    </header>
+
+    <main>
+        <!-- Left Column -->
+        <div class="grid">
+            <!-- Panel 1: Gerar Plano -->
+            <section class="card">
+                <h2>1️⃣ Gerar Plano via LLM</h2>
+                <div class="grid">
+                    <label class="small muted">Descreva seu objetivo em linguagem natural</label>
+                    <textarea id="prompt" rows="4"
+                        placeholder="Ex: Buscar RNs da ANS sobre prazos máximos de atendimento dos últimos 2 anos, incluindo anexos e tabelas"></textarea>
+
+                    <div class="row">
+                        <button onclick="gerarPlano()" id="gerarBtn">🧠 Gerar Plano</button>
+                        <button class="secondary" onclick="carregarExemplo()">📋 Exemplo</button>
+                        <button class="secondary" onclick="limparPlano()">🗑️ Limpar</button>
+                        <span id="planSpinner" class="spinner" style="display:none;"></span>
+                    </div>
+
+                    <div id="planOut" class="grid">
+                        <div class="muted small">💡 O LLM gerará um plano estruturado aqui. Você pode editar antes de
+                            executar.</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Panel 2: Executar Loop -->
+            <section class="card">
+                <h2>2️⃣ Executar Loop Agentivo</h2>
+                <div class="grid">
+                    <label class="small muted">Plan ID (opcional - deixe vazio para usar o plano editado acima)</label>
+                    <input id="planId" placeholder="550e8400-e29b-41d4-a716-446655440000" />
+
+                    <div class="row">
+                        <button onclick="executarLoop()" id="runBtn">
+                            <span id="runBtnText">🚀 Executar</span>
+                        </button>
+                        <button class="secondary" onclick="pararPoll()">⏸️ Pausar Refresh</button>
+                        <span id="runSpinner" class="htmx-indicator spinner" style="display:none;"></span>
+                    </div>
+
+                    <div id="runRes" class="muted small"></div>
+                </div>
+            </section>
+
+            <!-- Panel 3: Config Avançada -->
+            <section class="card">
+                <h2>⚙️ Configuração Avançada</h2>
+                <div class="config-panel">
+                    <div class="toggle">
+                        <input type="checkbox" id="useLLMLocal" />
+                        <label for="useLLMLocal" class="small">Usar LLM Local (LM Studio/Ollama)</label>
+                    </div>
+                    <div id="llmLocalConfig" style="display:none;" class="grid">
+                        <input id="llmBaseUrl" placeholder="http://localhost:1234/v1"
+                            value="http://localhost:1234/v1" />
+                        <input id="llmModel" placeholder="llama-3.2-3b" value="llama-3.2-3b" />
+                        <div class="tiny muted">Base URL e modelo local (não salva no plano, só para teste)</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Panel 4: Pipeline Shortcuts -->
+            <section class="card">
+                <h2>⚡ Atalhos de Pipeline</h2>
+                <div class="row">
+                    <button class="secondary" hx-post="/run/search" hx-headers='{"Content-Type":"application/json"}'
+                        hx-vals='{"query":"RN 259 ANS","topn":30}' hx-target="#pipesOut" hx-indicator="#pipeSpinner">🔍
+                        Search Demo</button>
+
+                    <button class="secondary" hx-post="/run/ingest" hx-headers='{"Content-Type":"application/json"}'
+                        hx-vals='{"limit":10}' hx-target="#pipesOut" hx-indicator="#pipeSpinner">📥 Ingest Demo</button>
+
+                    <span id="pipeSpinner" class="htmx-indicator spinner"></span>
+                </div>
+                <pre id="pipesOut" class="muted small">Aguardando comando...</pre>
+            </section>
+        </div>
+
+        <!-- Right Column -->
+        <div class="grid">
+            <!-- Panel 5: Iterações (Audit Trail) -->
+            <section class="card">
+                <h2>3️⃣ Iterações & Audit Trail</h2>
+                <div class="row" style="margin-bottom: 12px;">
+                    <span class="small muted">Auto-refresh a cada 3s quando em execução</span>
+                    <button class="secondary" style="margin-left: auto;" onclick="atualizarIters()">🔄 Refresh</button>
+                </div>
+                <div id="iters" class="grid small">
+                    <div class="muted">Aguardando execução…</div>
+                </div>
+            </section>
+
+            <!-- Panel 6: Documentos Aprovados -->
+            <section class="card" style="grid-column: 1 / -1;">
+                <h2>✅ Documentos Aprovados & Ações</h2>
+
+                <!-- Filters -->
+                <div class="row" style="margin-bottom: 12px;">
+                    <input id="apPlan" placeholder="plan_id (opcional)" style="width: 280px;" />
+                    <input id="apLimit" value="100" style="width: 80px;" />
+                    <button class="secondary" onclick="carregarAprovados()">🔄 Recarregar</button>
+                </div>
+
+                <!-- Batch Actions -->
+                <div class="row" style="margin-bottom: 12px; padding: 12px; background: #1f2937; border-radius: 8px;">
+                    <span class="small muted">Ação em lote:</span>
+                    <select id="apMode" style="width: 200px;">
+                        <option value="regenerate">🔧 Rechunk (overwrite)</option>
+                        <option value="push">⬆️ Push to Vector</option>
+                        <option value="delete">🗑️ Remove from Vector</option>
+                    </select>
+                    <input id="apCollection" value="kb_regulatory" placeholder="collection" style="width: 150px;" />
+                    <button onclick="batchApproved()">▶️ Executar seleção</button>
+                    <button class="secondary" onclick="selecionarTodos()">☑️ Selecionar todos</button>
+                </div>
+
+                <!-- Table -->
+                <div id="approvedTable" style="overflow-x: auto; max-height: 500px; overflow-y: auto;">
+                    <div class="muted small">Carregando aprovados...</div>
+                </div>
+
+                <!-- Status output -->
+                <pre id="apStatus" class="kbd small" style="margin-top: 12px; max-height: 200px;"></pre>
+            </section>
+        </div>
+    </main>
+
+    <!-- Templates -->
+    <template id="planTpl">
+        <div class="grid">
+            <div class="row">
+                <span class="badge ok">Plano Gerado</span>
+                <span class="small muted">Plan ID: <span id="planIdShow" class="kbd info"></span></span>
+            </div>
+            <label class="small muted">Revise e edite se necessário:</label>
+            <textarea id="planJson" rows="16"></textarea>
+            <div class="tiny muted">
+                💡 Edite queries, quality_gates, allow_domains, etc. antes de executar
+            </div>
+        </div>
+    </template>
+
+    <script>
+        let pollTimer = null;
+        let currentPlanId = null;
+        let approvedUrls = [];
+
+        // Gerar plano via fetch (em vez de HTMX para melhor controle)
+        async function gerarPlano() {
+            const btn = document.getElementById('gerarBtn');
+            const spinner = document.getElementById('planSpinner');
+            const promptText = document.getElementById('prompt').value.trim();
+
+            if (!promptText) {
+                alert('Digite um prompt primeiro!');
+                return;
+            }
+
+            btn.disabled = true;
+            spinner.style.display = 'inline-block';
+
+            try {
+                const res = await fetch('/agentic/plan', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: promptText })
+                });
+
+                if (!res.ok) {
+                    const error = await res.json().catch(() => ({ detail: 'Erro desconhecido' }));
+                    throw new Error(error.detail || `HTTP ${res.status}`);
+                }
+
+                const data = await res.json();
+                renderPlano(data);
+            } catch (err) {
+                document.getElementById('planOut').innerHTML = `<div class="err">❌ Erro: ${err.message}</div>`;
+            } finally {
+                btn.disabled = false;
+                spinner.style.display = 'none';
+            }
+        }
+
+        // Config toggle LLM local
+        document.getElementById('useLLMLocal').addEventListener('change', (e) => {
+            document.getElementById('llmLocalConfig').style.display = e.target.checked ? 'grid' : 'none';
+        });
+
+        // Exemplo de prompt
+        function carregarExemplo() {
+            document.getElementById('prompt').value =
+                "Buscar Resoluções Normativas da ANS sobre prazos máximos de atendimento e cobertura obrigatória, publicadas entre 2022-2025";
+        }
+
+        function limparPlano() {
+            document.getElementById('prompt').value = '';
+            document.getElementById('planOut').innerHTML = '<div class="muted small">Plano limpo.</div>';
+            currentPlanId = null;
+        }
+
+        // Processar respostas HTMX de pipeline shortcuts
+        document.body.addEventListener('htmx:afterOnLoad', (e) => {
+            if (e.target.id === 'pipesOut' && e.detail.xhr) {
+                try {
+                    const data = JSON.parse(e.detail.xhr.responseText);
+                    e.target.textContent = JSON.stringify(data, null, 2);
+                } catch {
+                    // Já é texto, deixa como está
+                }
+            }
+        });
+
+        function renderPlano(data) {
+            const tpl = document.getElementById('planTpl').content.cloneNode(true);
+            tpl.getElementById('planJson').value = JSON.stringify(data.plan, null, 2);
+            tpl.getElementById('planIdShow').textContent = data.plan_id || "(gerado localmente)";
+
+            document.getElementById('planOut').innerHTML = "";
+            document.getElementById('planOut').appendChild(tpl);
+
+            currentPlanId = data.plan_id;
+        }
+
+        // Executar loop agentivo
+        async function executarLoop() {
+            const btn = document.getElementById('runBtn');
+            const spinner = document.getElementById('runSpinner');
+            const btnText = document.getElementById('runBtnText');
+
+            btn.disabled = true;
+            spinner.style.display = 'inline-block';
+            btnText.textContent = '🔄 Executando...';
+
+            const explicitId = document.getElementById('planId').value.trim();
+            let body = {};
+
+            if (explicitId) {
+                body.plan_id = explicitId;
+                currentPlanId = explicitId;
+            } else {
+                const planBox = document.getElementById('planJson');
+                if (!planBox) {
+                    alert("Gere um plano primeiro ou informe um plan_id.");
+                    btn.disabled = false;
+                    spinner.style.display = 'none';
+                    btnText.textContent = '🚀 Executar';
+                    return;
+                }
+                try {
+                    body.plan_override = JSON.parse(planBox.value);
+                } catch {
+                    alert("JSON de plano inválido. Corrija e tente novamente.");
+                    btn.disabled = false;
+                    spinner.style.display = 'none';
+                    btnText.textContent = '🚀 Executar';
+                    return;
+                }
+            }
+
+            try {
+                const res = await fetch('/agentic/run', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+
+                const result = await res.json();
+
+                if (res.ok) {
+                    currentPlanId = result.plan_id;
+                    approvedUrls = result.promoted_urls || [];
+
+                    document.getElementById('runRes').innerHTML = `
+            <div class="badge ok">Completo!</div>
+            <div class="grid" style="margin-top: 8px;">
+              <div>Plan ID: <span class="kbd">${result.plan_id}</span></div>
+              <div>Iterações: <span class="info">${result.iterations}</span></div>
+              <div>Aprovados: <span class="ok">${result.approved_total}</span></div>
+              <div>Parado por: <span class="warn">${result.stopped_by}</span></div>
+            </div>
+          `;
+
+                    // Refresh iterations
+                    iniciarPoll(currentPlanId);
+                    renderizarAprovados(approvedUrls);
+                } else {
+                    document.getElementById('runRes').innerHTML = `<div class="err">Erro: ${result.detail || 'Falha na execução'}</div>`;
+                }
+            } catch (err) {
+                document.getElementById('runRes').innerHTML = `<div class="err">Erro: ${err.message}</div>`;
+            } finally {
+                btn.disabled = false;
+                spinner.style.display = 'none';
+                btnText.textContent = '🚀 Executar';
+            }
+        }
+
+        // Poll de iterações
+        async function buscarIters(planId) {
+            if (!planId) return;
+
+            try {
+                const res = await fetch(`/agentic/iters/${planId}`);
+                const data = await res.json();
+
+                if (!data || !data.iterations || data.iterations.length === 0) {
+                    document.getElementById('iters').innerHTML = '<div class="muted">Sem iterações ainda...</div>';
+                    return;
+                }
+
+                renderizarIteracoes(data);
+            } catch (err) {
+                document.getElementById('iters').innerHTML = `<div class="err">Erro ao buscar: ${err.message}</div>`;
+            }
+        }
+
+        function renderizarIteracoes(data) {
+            const box = document.getElementById('iters');
+
+            const html = data.iterations.map(it => {
+                const approved = (it.approved_urls || []).length;
+                const rejected = (it.rejected || []).length;
+                const newQ = (it.new_queries || []).length;
+
+                // Render rejected details with violations
+                let rejectedHtml = '';
+                if (rejected > 0) {
+                    let rejectedItems = (it.rejected || []).slice(0, 5).map(r => {
+                        const urlShort = r.url.split('/').slice(-2).join('/');
+                        const violations = (r.violations || []).join(', ');
+                        return `
+              <div class="tiny" style="margin: 4px 0; padding-left: 12px; border-left: 2px solid #dc2626;">
+                <div style="color: #fca5a5;">❌ ${urlShort}</div>
+                <div style="color: #94a3b8;">Razão: ${r.reason}</div>
+                ${violations ? `<div style="color: #f59e0b;">Violations: ${violations}</div>` : ''}
+              </div>
+            `;
+                    }).join('');
+
+                    if (rejected > 5) {
+                        rejectedItems += `<div class="tiny muted" style="padding-left: 12px;">... e mais ${rejected - 5} rejeitados</div>`;
+                    }
+
+                    rejectedHtml = `
+            <div style="margin-top: 8px;">
+              <details>
+                <summary class="tiny" style="cursor: pointer; color: #f59e0b;">
+                  🔍 Ver ${rejected} rejeitados (com motivos)
+                </summary>
+                <div style="margin-top: 8px;">${rejectedItems}</div>
+              </details>
+            </div>
+          `;
+                }
+
+                return `
+          <div class="iter-card">
+            <div class="iter-header">
+              Iteração ${it.iter_num}
+              <span class="badge ${approved > 0 ? 'ok' : 'warn'}">${approved} ✓</span>
+              <span class="badge ${rejected > 0 ? 'err' : 'ok'}">${rejected} ✗</span>
+            </div>
+            <div class="tiny muted">${it.created_at}</div>
+            <div class="small" style="margin-top: 8px;">
+              <div><strong>Queries:</strong> ${(it.executed_queries || []).join(', ')}</div>
+              ${newQ > 0 ? `<div style="color: #60a5fa;"><strong>🔄 Novas queries:</strong> ${(it.new_queries || []).join(', ')}</div>` : ''}
+              ${it.summary ? `<div class="muted tiny">${it.summary}</div>` : ''}
+            </div>
+            ${rejectedHtml}
+          </div>
+        `;
+            }).join('');
+
+            box.innerHTML = `
+        <div class="small"><strong>Plan ID:</strong> <span class="kbd">${data.plan_id}</span></div>
+        <div class="small"><strong>Total iterações:</strong> ${data.total_iterations}</div>
+        <div style="margin-top: 12px;">${html}</div>
+      `;
+        }
+
+        function renderizarAprovados(urls) {
+            const box = document.getElementById('approved');
+            const btn = document.getElementById('downloadBtn');
+
+            if (!urls || urls.length === 0) {
+                box.innerHTML = '<div class="muted">Nenhum documento aprovado ainda.</div>';
+                btn.disabled = true;
+                return;
+            }
+
+            btn.disabled = false;
+
+            const html = `
+        <div class="small"><strong>Total aprovados:</strong> <span class="ok">${urls.length}</span></div>
+        <ul class="url-list">
+          ${urls.slice(0, 20).map(url => `
+            <li>
+              <a href="${url}" target="_blank" title="${url}">📄 ${url.split('/').pop() || url}</a>
+            </li>
+          `).join('')}
+        </ul>
+        ${urls.length > 20 ? `<div class="muted tiny">... e mais ${urls.length - 20} documentos</div>` : ''}
+      `;
+
+            box.innerHTML = html;
+        }
+
+        function baixarAprovados() {
+            if (approvedUrls.length === 0) return;
+
+            const json = JSON.stringify({
+                plan_id: currentPlanId,
+                approved_count: approvedUrls.length,
+                urls: approvedUrls,
+                exported_at: new Date().toISOString()
+            }, null, 2);
+
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `approved_${currentPlanId || 'export'}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function iniciarPoll(planId) {
+            pararPoll();
+            if (!planId) return;
+
+            pollTimer = setInterval(() => buscarIters(planId), 3000);
+            buscarIters(planId);
+        }
+
+        function pararPoll() {
+            if (pollTimer) {
+                clearInterval(pollTimer);
+                pollTimer = null;
+            }
+        }
+
+        function atualizarIters() {
+            if (currentPlanId) {
+                buscarIters(currentPlanId);
+            }
+        }
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', pararPoll);
+        // ========== APROVADOS & AÇÕES ==========
+
+        let approvedDocs = [];
+        let chunkPollTimer = null;
+
+        // Carregar aprovados ao iniciar
+        document.addEventListener('DOMContentLoaded', () => {
+            carregarAprovados();
+        });
+
+        async function carregarAprovados() {
+            const planId = document.getElementById('apPlan').value.trim();
+            const limit = document.getElementById('apLimit').value || 100;
+
+            const url = `/agentic/approved?${planId ? `plan_id=${planId}&` : ''}limit=${limit}`;
+
+            try {
+                const res = await fetch(url);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+                const data = await res.json();
+                approvedDocs = data.docs || [];
+                renderApprovedTable(approvedDocs);
+
+                // Start polling for chunk status
+                startChunkStatusPoll();
+            } catch (err) {
+                document.getElementById('approvedTable').innerHTML = `<div class="err">❌ Erro ao carregar: ${err.message}</div>`;
+            }
+        }
+
+        function renderApprovedTable(docs) {
+            if (!docs || docs.length === 0) {
+                document.getElementById('approvedTable').innerHTML = '<div class="muted small">Nenhum documento aprovado.</div>';
+                return;
+            }
+
+            const table = `
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+                    <thead>
+                        <tr style="background: #1f2937; border-bottom: 2px solid #374151;">
+                            <th style="padding: 8px; text-align: left;"><input type="checkbox" id="selectAll" onchange="toggleSelectAll(this.checked)"/></th>
+                            <th style="padding: 8px; text-align: left;">Título</th>
+                            <th style="padding: 8px; text-align: center;">Tipo</th>
+                            <th style="padding: 8px; text-align: center;">Score</th>
+                            <th style="padding: 8px; text-align: center;">Cache</th>
+                            <th style="padding: 8px; text-align: center;">Vector</th>
+                            <th style="padding: 8px; text-align: center;">Chunks</th>
+                            <th style="padding: 8px; text-align: right;">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${docs.map(d => {
+                const hash = d.doc_hash || '';
+                const shortTitle = (d.title || 'Sem título').substring(0, 60);
+                const score = d.score ? d.score.toFixed(2) : '—';
+                const cacheClass = d.cache_status === 'done' ? 'ok' : 'muted';
+                const vectorClass = d.vector_status === 'present' ? 'ok' : (d.vector_status === 'error' ? 'err' : 'muted');
+
+                return `
+                                <tr style="border-bottom: 1px solid #374151;">
+                                    <td style="padding: 8px;">
+                                        <input type="checkbox" class="apSel" value="${d.url}" data-hash="${hash}"/>
+                                    </td>
+                                    <td style="padding: 8px;">
+                                        <a href="${d.url}" target="_blank" style="color: #60a5fa; text-decoration: none;">${shortTitle}</a>
+                                    </td>
+                                    <td style="padding: 8px; text-align: center;">
+                                        <span class="badge">${d.final_type || '?'}</span>
+                                    </td>
+                                    <td style="padding: 8px; text-align: center;">${score}</td>
+                                    <td style="padding: 8px; text-align: center;">
+                                        <span class="badge ${cacheClass}">${d.cache_status || 'none'}</span>
+                                    </td>
+                                    <td style="padding: 8px; text-align: center;">
+                                        <span class="badge ${vectorClass}">${d.vector_status || 'none'}</span>
+                                    </td>
+                                    <td style="padding: 8px; text-align: center;">${d.chunk_count || 0}</td>
+                                    <td style="padding: 8px; text-align: right;">
+                                        <button class="tiny secondary" onclick="rechunkOne('${d.url}')">Rechunk</button>
+                                        ${hash ? `<button class="tiny secondary" onclick="pushOne('${hash}')">Push</button>` : ''}
+                                        ${hash && d.vector_status !== 'none' ? `<button class="tiny secondary" onclick="deleteOne('${hash}')">Remove</button>` : ''}
+                                    </td>
+                                </tr>
+                            `;
+            }).join('')}
+                    </tbody>
+                </table>
+            `;
+
+            document.getElementById('approvedTable').innerHTML = table;
+        }
+
+        function toggleSelectAll(checked) {
+            document.querySelectorAll('.apSel').forEach(cb => cb.checked = checked);
+        }
+
+        function selecionarTodos() {
+            document.getElementById('selectAll').checked = true;
+            toggleSelectAll(true);
+        }
+
+        // Per-item actions
+        async function rechunkOne(url) {
+            const coll = document.getElementById('apCollection').value;
+            await executeRegeneração([url], [], coll);
+        }
+
+        async function pushOne(hash) {
+            const coll = document.getElementById('apCollection').value;
+            await executePush([hash], coll);
+        }
+
+        async function deleteOne(hash) {
+            const coll = document.getElementById('apCollection').value;
+            await executeDelete([hash], coll);
+        }
+
+        // Batch action
+        async function batchApproved() {
+            const mode = document.getElementById('apMode').value;
+            const coll = document.getElementById('apCollection').value;
+
+            const selected = Array.from(document.querySelectorAll('.apSel:checked'));
+            if (selected.length === 0) {
+                alert('Selecione pelo menos 1 documento!');
+                return;
+            }
+
+            const urls = selected.map(cb => cb.value);
+            const hashes = selected.map(cb => cb.dataset.hash).filter(h => h);
+
+            if (mode === 'regenerate') {
+                await executeRegeneração(urls, hashes, coll);
+            } else if (mode === 'push') {
+                if (hashes.length === 0) {
+                    alert('Nenhum doc_hash disponível para push!');
+                    return;
+                }
+                await executePush(hashes, coll);
+            } else if (mode === 'delete') {
+                if (hashes.length === 0) {
+                    alert('Nenhum doc_hash disponível para delete!');
+                    return;
+                }
+                await executeDelete(hashes, coll);
+            }
+        }
+
+        async function executeRegeneração(urls, hashes, collection) {
+            const statusBox = document.getElementById('apStatus');
+            statusBox.textContent = 'Enviando requisição de regeneração...';
+
+            try {
+                const res = await fetch('/ingest/regenerate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ urls, doc_hashes: hashes, overwrite: true, collection })
+                });
+
+                const data = await res.json();
+                statusBox.textContent = JSON.stringify(data, null, 2);
+
+                // Reload approved list after 2s
+                setTimeout(() => carregarAprovados(), 2000);
+            } catch (err) {
+                statusBox.textContent = `Erro: ${err.message}`;
+            }
+        }
+
+        async function executePush(hashes, collection) {
+            const statusBox = document.getElementById('apStatus');
+            statusBox.textContent = 'Enviando para VectorDB...';
+
+            try {
+                const res = await fetch('/vector/push', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ doc_hashes: hashes, collection })
+                });
+
+                const data = await res.json();
+                statusBox.textContent = JSON.stringify(data, null, 2);
+
+                setTimeout(() => carregarAprovados(), 2000);
+            } catch (err) {
+                statusBox.textContent = `Erro: ${err.message}`;
+            }
+        }
+
+        async function executeDelete(hashes, collection) {
+            const statusBox = document.getElementById('apStatus');
+            statusBox.textContent = 'Removendo do VectorDB...';
+
+            try {
+                const res = await fetch('/vector/delete', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ doc_hashes: hashes, collection })
+                });
+
+                const data = await res.json();
+                statusBox.textContent = JSON.stringify(data, null, 2);
+
+                setTimeout(() => carregarAprovados(), 2000);
+            } catch (err) {
+                statusBox.textContent = `Erro: ${err.message}`;
+            }
+        }
+
+        // Poll chunk status every 5s
+        function startChunkStatusPoll() {
+            if (chunkPollTimer) clearInterval(chunkPollTimer);
+
+            chunkPollTimer = setInterval(async () => {
+                const hashes = approvedDocs.map(d => d.doc_hash).filter(h => h);
+                if (hashes.length === 0) return;
+
+                try {
+                    const res = await fetch(`/chunks/status?doc_hashes=${hashes.join(',')}`);
+                    if (!res.ok) return;
+
+                    const data = await res.json();
+
+                    // Update table cells without full reload
+                    data.manifests.forEach(m => {
+                        const doc = approvedDocs.find(d => d.doc_hash === m.doc_hash);
+                        if (doc) {
+                            doc.cache_status = m.status;
+                            doc.vector_status = m.vector_status;
+                            doc.chunk_count = m.chunk_count;
+                        }
+                    });
+
+                    // Re-render table
+                    renderApprovedTable(approvedDocs);
+
+                } catch (err) {
+                    // Silently ignore polling errors
+                }
+            }, 5000);
+        }
+
+    </script>
+</body>
+
+</html>

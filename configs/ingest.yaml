@@ -1,0 +1,80 @@
+# Ingest Pipeline Configuration
+# Uses ${VAR} placeholders resolved from environment variables
+
+# Pipeline settings
+pipeline:
+  limit: 100  # Max documents to process per run
+
+# OpenAI LLM settings
+llm:
+  api_key: ${OPENAI_API_KEY}
+  model: gpt-4o-mini
+  temperature: 0.0
+  max_tokens: 2000
+  timeout: ${REQUEST_TIMEOUT_SECONDS}
+
+# HTML LLM Structure Extractor
+llm_html_extractor:
+  enabled: true
+  model: gpt-4o-mini
+  max_chars: 120000       # Cap input to control tokens
+  max_chars_llm: 80000    # Extra cap just before calling LLM
+  temperature: 0
+
+# Download settings
+download:
+  timeout: ${REQUEST_TIMEOUT_SECONDS}
+  max_retries: 3
+  retry_delay: 2
+  user_agent: "Mozilla/5.0 (compatible; RegulatoryBot/1.0)"
+  download_dir: data/downloads
+
+# Chunking settings
+chunking:
+  min_tokens: 100
+  max_tokens: 512
+  overlap_tokens: 50
+  encoding: cl100k_base
+
+# PDF processing
+pdf:
+  fallback_to_pypdf: true
+  max_pages_preview: 5
+  extract_images: false
+  
+# ZIP processing
+zip:
+  max_extract_size_mb: 500
+  allowed_extensions:
+    - .pdf
+    - .xlsx
+    - .xls
+    - .csv
+    - .txt
+    - .html
+  
+  # TUSS/TISS table detection patterns
+  table_patterns:
+    - "TUSS"
+    - "TISS"
+    - "Tabela de Procedimentos"
+    - "Terminologia Unificada"
+
+# HTML processing
+html:
+  use_readability: true
+  extract_tables: true
+  min_content_length: 200
+
+# Output settings
+output:
+  format: jsonl
+  output_dir: data/output
+  filename: kb_regulatory.jsonl
+  
+# Diff strategy
+diff:
+  check_etag: true
+  check_last_modified: true
+  check_content_hash: false
+
