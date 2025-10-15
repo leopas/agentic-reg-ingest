@@ -25,7 +25,7 @@ No interesse de promover um ambiente aberto e acolhedor, nós, como colaboradore
 ## Aplicação
 
 Instâncias de comportamento abusivo podem ser reportadas para:
-- **Email:** [Adicionar email do maintainer]
+- **Email:** leopoldo.de.lima@gmail.com
 - **Issue privado:** GitHub
 
 Todas as reclamações serão revisadas e investigadas.
