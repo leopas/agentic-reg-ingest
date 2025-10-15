@@ -167,3 +167,22 @@ license-headers:
 	@python tools/add_mit_headers.py
 	@echo "✅ License headers applied!"
 
+docs-serve:
+	@echo "📚 Starting MkDocs server on http://localhost:8001"
+	@mkdocs serve -a 0.0.0.0:8001
+
+docs-build:
+	@echo "🏗️ Building MkDocs site..."
+	@mkdocs build
+	@echo "✅ Site built in site/"
+
+api-schema:
+	@echo "📡 Exporting OpenAPI schema..."
+	@python tools/export_openapi.py
+	@echo "✅ Schema exported to docs/api/openapi.json"
+
+notices:
+	@echo "📜 Generating third-party notices..."
+	@pip-licenses --format=markdown --with-authors --with-urls --output-file=docs/compliance/THIRD_PARTY_NOTICES.md || echo "⚠️ pip-licenses not installed. Run: pip install pip-licenses"
+	@echo "✅ Notices generated!"
+

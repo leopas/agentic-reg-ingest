@@ -1,0 +1,10 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2025 Leopoldo Carvalho Correia de Lima
+
+# MkDocs dependencies for documentation site
+
+mkdocs>=1.5.0
+mkdocs-material>=9.4.0
+pymdown-extensions>=10.3
+mkdocs-git-revision-date-localized-plugin>=1.2.0
+
