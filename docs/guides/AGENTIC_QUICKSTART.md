@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: MIT | (c) 2025 Leopoldo Carvalho Correia de Lima -->
+
 # 🚀 Agentic Search - Guia Rápido
 
 ## 🎯 O que é?

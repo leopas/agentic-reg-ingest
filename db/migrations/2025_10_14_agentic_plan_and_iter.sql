@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2025 Leopoldo Carvalho Correia de Lima
+
 -- Migration: Add agentic search plan and iteration tracking
 -- Date: 2025-10-14
 -- Purpose: Enable Plan→Act→Observe→Judge→Re-plan loop with full audit trail

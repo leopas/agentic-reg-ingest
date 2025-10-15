@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: MIT | (c) 2025 Leopoldo Carvalho Correia de Lima -->
+
 # 📝 Changelog - Agentic Search Implementation
 
 ## [2.0.0] - 2025-10-14 - AGENTIC SEARCH RELEASE 🚀

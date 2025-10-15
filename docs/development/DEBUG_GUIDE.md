@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: MIT | (c) 2025 Leopoldo Carvalho Correia de Lima -->
+
 # Guia de Debug no VSCode/Cursor
 
 ## 🚀 Como Debugar a Search Pipeline

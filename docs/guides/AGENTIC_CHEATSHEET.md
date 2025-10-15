@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: MIT | (c) 2025 Leopoldo Carvalho Correia de Lima -->
+
 # 🎯 Agentic Search - Cheat Sheet
 
 ## 🚀 Como Rodar (5 formas diferentes)

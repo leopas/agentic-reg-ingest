@@ -1,6 +1,12 @@
+<!-- SPDX-License-Identifier: MIT | (c) 2025 Leopoldo Carvalho Correia de Lima -->
+
 # agentic-reg-ingest
 
-Production-grade pipeline for searching and ingesting regulatory documents with intelligent chunking and vector storage.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-009688.svg)](https://fastapi.tiangolo.com/)
+
+Production-grade pipeline for searching and ingesting regulatory documents with intelligent chunking, vector storage, agentic search, and RAG chat.
 
 ## 🎯 Features
 
@@ -847,5 +853,22 @@ pip install -r requirements.txt
 
 ---
 
-**Built with ❤️ for regulatory compliance and knowledge management**
+## 📄 License
+
+**MIT License**
+
+Copyright (c) 2025 **Leopoldo Carvalho Correia de Lima**
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+See [LICENSE](./LICENSE) file for full text.
+
+---
+
+**Built with ❤️ by Leopoldo Carvalho Correia de Lima**  
+**For regulatory compliance and knowledge management**
 

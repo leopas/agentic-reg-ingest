@@ -1,0 +1,158 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2025 Leopoldo Carvalho Correia de Lima
+
+site_name: Agentic Reg Ingest
+site_description: Production-grade pipeline for regulatory document search, ingestion, and RAG
+site_author: Leopoldo Carvalho Correia de Lima
+site_url: https://github.com/leopas/agentic-reg-ingest  # Update with actual URL
+
+repo_url: https://github.com/leopas/agentic-reg-ingest  # Update with actual URL
+repo_name: agentic-reg-ingest
+edit_uri: edit/main/docs/
+
+copyright: Copyright &copy; 2025 Leopoldo Carvalho Correia de Lima
+
+theme:
+  name: material
+  language: pt-BR
+  palette:
+    # Light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: blue
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    # Dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: blue
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.tabs.link
+  icon:
+    repo: fontawesome/brands/github
+
+markdown_extensions:
+  - toc:
+      permalink: true
+      toc_depth: 3
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - attr_list
+  - md_in_html
+  - tables
+  - footnotes
+
+plugins:
+  - search:
+      lang: pt
+  - git-revision-date-localized:
+      enable_creation_date: true
+      type: datetime
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/leopas  # Update
+  version:
+    provider: mike
+
+nav:
+  - Home: index.md
+  
+  - Overview:
+    - Product Overview: overview/PRODUCT_OVERVIEW.md
+    - Use Cases: overview/USE_CASES.md
+    - Limitations & Risks: overview/LIMITATIONS_AND_RISKS.md
+  
+  - Architecture:
+    - System Architecture: architecture/ARCHITECTURE.md
+    - Data Model: architecture/DATA_MODEL.md
+    - Pipelines: architecture/PIPELINES.md
+  
+  - User Guides:
+    - guides/README.md
+    - Agentic Search:
+      - Quick Start: guides/AGENTIC_QUICKSTART.md
+      - Cheatsheet: guides/AGENTIC_CHEATSHEET.md
+      - Configuration: guides/AGENTIC_CONFIG_GUIDE.md
+      - Audit Trail: guides/AUDIT_TRAIL_GUIDE.md
+    - RAG Chat: guides/CHAT_RAG_GUIDE.md
+    - Vector Database: guides/VECTOR_PUSH_GUIDE.md
+    - Web UI: guides/UI_GUIDE.md
+    - Quick Reference: guides/QUICK_REFERENCE.md
+  
+  - Setup:
+    - setup/README.md
+    - Start Here: setup/START_HERE.md
+    - Complete Setup: setup/SETUP_COMPLETO.md
+    - Vector Push Setup: setup/SETUP_VECTOR_PUSH.md
+    - Quickstart Checklist: setup/QUICKSTART_CHECKLIST.md
+  
+  - Operations:
+    - Deployment Guide: operations/DEPLOYMENT_GUIDE.md
+    - Operations Runbook: operations/OPERATIONS_RUNBOOK.md
+    - Observability: operations/OBSERVABILITY.md
+    - Security: operations/SECURITY.md
+    - Privacy & Telemetry: operations/PRIVACY_TELEMETRY.md
+    - Retention Policy: operations/RETENTION_POLICY.md
+  
+  - API Reference:
+    - API Overview: api/API_REFERENCE.md
+    - Endpoints Quickstart: api/ENDPOINTS_QUICKSTART.md
+  
+  - RAG:
+    - Evaluation Plan: rag/EVALUATION_PLAN.md
+    - Anchors & Chunking: rag/ANCHORS_AND_CHUNKING.md
+  
+  - Compliance:
+    - Data Provenance: compliance/DATA_PROVENANCE.md
+    - Audit Logs: compliance/AUDIT_LOGS.md
+    - Third Party Notices: compliance/THIRD_PARTY_NOTICES.md
+  
+  - Project:
+    - Contributing: project/CONTRIBUTING.md
+    - Code of Conduct: project/CODE_OF_CONDUCT.md
+    - Governance: project/GOVERNANCE.md
+    - Versioning & Changelog: project/VERSIONING_AND_CHANGELOG.md
+  
+  - Roadmap: roadmap/ROADMAP.md
+  
+  - Development:
+    - development/README.md
+    - Debug Guide: development/DEBUG_GUIDE.md
+    - Debug Web UI: development/DEBUG_WEB_UI.md
+    - Testing: development/TEST_AGENTIC.md
+  
+  - Changelog:
+    - changelog/README.md
+    - Changelog: changelog/CHANGELOG.md
+    - Agentic Changelog: changelog/CHANGELOG_AGENTIC.md
+

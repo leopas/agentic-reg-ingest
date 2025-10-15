@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2025 Leopoldo Carvalho Correia de Lima
+
 -- Migration: Create chunk_manifest and chunk_store tables
 -- Date: 2025-10-14
 -- Purpose: Track chunked documents and store their chunks for vector loading

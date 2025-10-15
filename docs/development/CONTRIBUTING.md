@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: MIT | (c) 2025 Leopoldo Carvalho Correia de Lima -->
+
 # Contributing to agentic-reg-ingest
 
 Thank you for your interest in contributing! This document provides guidelines for contributing to the project.

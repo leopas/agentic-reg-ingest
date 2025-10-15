@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: MIT | (c) 2025 Leopoldo Carvalho Correia de Lima -->
+
 # 🚀 COMEÇAR AQUI - Guia Rápido de Execução
 
 ## ✅ Status Atual

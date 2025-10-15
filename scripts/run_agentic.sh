@@ -1,4 +1,7 @@
 #!/bin/bash
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2025 Leopoldo Carvalho Correia de Lima
+
 # Agentic Search Runner - Linux/Mac Wrapper
 # Usage: ./scripts/run_agentic.sh "seu prompt aqui"
 

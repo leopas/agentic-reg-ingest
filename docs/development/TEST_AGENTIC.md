@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: MIT | (c) 2025 Leopoldo Carvalho Correia de Lima -->
+
 # 🧪 Testando o Sistema Agentic - Passo a Passo
 
 ## ✅ **Pré-requisitos**

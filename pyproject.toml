@@ -1,9 +1,13 @@
 [project]
 name = "agentic-reg-ingest"
-version = "1.0.0"
-description = "Production-grade pipeline for searching and ingesting regulatory documents"
+version = "2.0.0"
+description = "Production-grade pipeline for searching and ingesting regulatory documents with agentic search and RAG chat"
 readme = "README.md"
 requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [
+    { name = "Leopoldo Carvalho Correia de Lima" }
+]
 
 [tool.black]
 line-length = 100

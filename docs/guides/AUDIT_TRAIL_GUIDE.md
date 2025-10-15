@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: MIT | (c) 2025 Leopoldo Carvalho Correia de Lima -->
+
 # 📊 Audit Trail - Guia de Interpretação
 
 ## 🎯 **O Que o Audit Trail Mostra**

@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2025 Leopoldo Carvalho Correia de Lima
+
 """CLI runner for Agentic Search with debug mode."""
 
 import argparse

@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2025 Leopoldo Carvalho Correia de Lima
+
 """HTML document ingestor with LLM structure extraction and PDF wrapper detection."""
 
 import structlog

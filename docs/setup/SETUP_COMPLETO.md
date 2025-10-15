@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: MIT | (c) 2025 Leopoldo Carvalho Correia de Lima -->
+
 # 🚀 Setup Completo - Do Zero ao Funcionando
 
 ## ⚡ **Quick Setup (5 minutos)**

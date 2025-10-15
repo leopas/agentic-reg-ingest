@@ -1,0 +1,60 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2025 Leopoldo Carvalho Correia de Lima
+
+name: License Check
+
+on:
+  pull_request:
+    branches: [main, master]
+  push:
+    branches: [main, master]
+
+jobs:
+  spdx-check:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Check SPDX headers
+        run: |
+          echo "Checking for SPDX headers in source files..."
+          
+          missing=0
+          
+          for file in $(git ls-files | grep -E '\.(py|js|ts|tsx|jsx|sh|sql|html|css|ya?ml|md)$' | grep -v '^LICENSE$'); do
+            if ! grep -q "SPDX-License-Identifier: MIT" "$file"; then
+              echo "❌ Missing SPDX header: $file"
+              missing=$((missing + 1))
+            fi
+          done
+          
+          if [ $missing -gt 0 ]; then
+            echo ""
+            echo "❌ Found $missing files without SPDX headers!"
+            echo "Run: make license-headers"
+            exit 1
+          fi
+          
+          echo "✅ All source files have SPDX headers!"
+      
+      - name: Verify LICENSE file
+        run: |
+          if [ ! -f LICENSE ]; then
+            echo "❌ LICENSE file not found!"
+            exit 1
+          fi
+          
+          if ! grep -q "MIT License" LICENSE; then
+            echo "❌ LICENSE file doesn't contain MIT License!"
+            exit 1
+          fi
+          
+          if ! grep -q "Leopoldo Carvalho Correia de Lima" LICENSE; then
+            echo "❌ LICENSE file missing author name!"
+            exit 1
+          fi
+          
+          echo "✅ LICENSE file is valid!"
+

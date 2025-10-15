@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2025 Leopoldo Carvalho Correia de Lima
+
 """Ingest pipeline: read DB → diff → route → ingest."""
 
 import argparse

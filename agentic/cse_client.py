@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2025 Leopoldo Carvalho Correia de Lima
+
 """Google Custom Search Engine (CSE) client."""
 
 from typing import Any, Dict, List, Optional

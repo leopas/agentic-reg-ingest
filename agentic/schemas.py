@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2025 Leopoldo Carvalho Correia de Lima
+
 """Pydantic schemas for Agentic Search system."""
 
 from datetime import datetime

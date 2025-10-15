@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: MIT | (c) 2025 Leopoldo Carvalho Correia de Lima -->
+
 # 🐛 Debug Web UI - Guia Completo
 
 ## 🚀 **3 Formas de Debugar a UI**

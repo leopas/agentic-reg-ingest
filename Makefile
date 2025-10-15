@@ -1,4 +1,4 @@
-.PHONY: help venv deps lock db-init migrate migrate-agentic migrate-chunks search ingest agentic-example agentic-view ui api lint test typecheck clean
+.PHONY: help venv deps lock db-init migrate migrate-agentic migrate-chunks search ingest agentic-example agentic-view ui api lint test typecheck clean license-headers
 
 help:
 	@echo "Agentic Regulatory Ingest - Make targets"
@@ -161,4 +161,9 @@ clean:
 	find . -type d -name ".mypy_cache" -exec rm -rf {} + 2>/dev/null || true
 	find . -type f -name "*.pyc" -delete
 	rm -rf data/downloads/* data/output/*
+
+license-headers:
+	@echo "Adding MIT license headers to source files..."
+	@python tools/add_mit_headers.py
+	@echo "✅ License headers applied!"
 

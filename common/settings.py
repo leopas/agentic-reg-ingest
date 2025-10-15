@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2025 Leopoldo Carvalho Correia de Lima
+
 """Application settings loaded from .env file."""
 
 from pydantic_settings import BaseSettings, SettingsConfigDict

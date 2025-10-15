@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2025 Leopoldo Carvalho Correia de Lima
+
 """Load JSONL chunks into Qdrant vector database."""
 
 import argparse
@@ -305,6 +308,193 @@ class QdrantLoader:
         except Exception as e:
             logger.error("vector_exists_failed", error=str(e))
             return result
+
+
+def push_doc_hashes(
+    doc_hashes: List[str],
+    collection: str,
+    batch_size: int = 64,
+    overwrite: bool = False,
+    fetch_chunks_fn=None,
+    fetch_manifests_fn=None,
+    mark_manifest_vector_fn=None,
+) -> Dict[str, Any]:
+    """
+    Push chunks to VectorDB for specified doc_hashes.
+    
+    Args:
+        doc_hashes: List of document hashes to push
+        collection: Collection name
+        batch_size: Batch size for upsert operations
+        overwrite: If True, delete existing points first
+        fetch_chunks_fn: Function to fetch chunks by hashes
+        fetch_manifests_fn: Function to fetch manifests by hashes
+        mark_manifest_vector_fn: Function to update manifest vector status
+        
+    Returns:
+        Dictionary with pushed, skipped counts and per-doc details
+    """
+    from datetime import datetime
+    from qdrant_client.models import PointStruct
+    from vector.qdrant_client import (
+        delete_by_doc_hashes,
+        ensure_collection,
+        get_client,
+        upsert_points,
+    )
+    from embeddings.encoder import encode_texts, get_embedding_dim
+    
+    logger.info("push_start", doc_hashes=len(doc_hashes), collection=collection, overwrite=overwrite)
+    
+    # Fetch data
+    chunks_by_hash = fetch_chunks_fn(doc_hashes) if fetch_chunks_fn else {}
+    manifests = fetch_manifests_fn(doc_hashes) if fetch_manifests_fn else {}
+    
+    # Get embedding dimension
+    dim = get_embedding_dim()
+    
+    # Ensure collection exists
+    client = get_client()
+    ensure_collection(client, collection, dim=dim, distance="Cosine")
+    
+    # Overwrite: delete existing points
+    if overwrite:
+        deleted = delete_by_doc_hashes(client, collection, doc_hashes)
+        logger.info("push_overwrite_deleted", deleted=deleted)
+    
+    # Process each doc_hash
+    pushed_total = 0
+    per_doc = {}
+    
+    for doc_hash in doc_hashes:
+        all_chunks = chunks_by_hash.get(doc_hash) or []
+        
+        if not all_chunks:
+            per_doc[doc_hash] = {"pushed": 0, "chunks": 0, "status": "no_chunks"}
+            continue
+        
+        pushed_doc = 0
+        
+        # Process in batches
+        for i in range(0, len(all_chunks), batch_size):
+            batch = all_chunks[i : i + batch_size]
+            
+            # Prepare common payload
+            common_payload = {
+                "collection": collection,
+                "pushed_at": datetime.utcnow().isoformat(),
+            }
+            
+            # Enrich with manifest data
+            manifest = manifests.get(doc_hash) or {}
+            if manifest:
+                common_payload.update({
+                    "title": manifest.get("title"),
+                    "source_type": manifest.get("source_type"),
+                    "url": manifest.get("url_norm"),
+                })
+            
+            # Normalize chunk data
+            for j, chunk in enumerate(batch):
+                chunk.setdefault("doc_hash", doc_hash)
+                # Ensure chunk_id is just the index (not doc_hash:index)
+                if "chunk_id" not in chunk:
+                    chunk["chunk_id"] = str(i + j)
+            
+            # Generate embeddings
+            texts = [c["text"] for c in batch]
+            
+            try:
+                vectors = encode_texts(texts)
+            except Exception as e:
+                logger.error("push_encode_failed", doc_hash=doc_hash, error=str(e))
+                per_doc[doc_hash] = {"pushed": 0, "chunks": len(all_chunks), "status": "encode_error", "error": str(e)}
+                continue
+            
+            # Create points
+            points = []
+            for chunk, vector in zip(batch, vectors):
+                chunk_idx = chunk.get("chunk_index", 0)
+                
+                payload = dict(common_payload)
+                payload.update({
+                    "doc_hash": chunk["doc_hash"],
+                    "chunk_id": str(chunk.get("chunk_id", "0")),
+                    "chunk_index": chunk_idx,
+                    "source_type": chunk.get("metadata", {}).get("source_type"),
+                    "text_len": len(chunk["text"]),
+                    "tokens": chunk.get("tokens"),
+                    "text": chunk["text"],  # Store full text for retrieval
+                })
+                
+                # Add anchor info if present
+                anchors = chunk.get("anchors")
+                if anchors:
+                    if isinstance(anchors, dict):
+                        payload["anchor_type"] = anchors.get("type")
+                        payload["anchor_text"] = anchors.get("value")
+                
+                # Point ID: Qdrant requires unsigned integer or UUID
+                # Generate deterministic integer from doc_hash + chunk_index
+                # Create deterministic ID: hash(doc_hash + chunk_index) as unsigned int
+                import hashlib
+                id_string = f"{chunk['doc_hash']}:{chunk_idx}"
+                id_hash = hashlib.sha256(id_string.encode()).hexdigest()
+                # Take first 16 hex chars and convert to int (64-bit safe)
+                point_id = int(id_hash[:16], 16)
+                
+                # Store readable ID in payload for debugging
+                payload["point_id_readable"] = id_string
+                
+                points.append(PointStruct(
+                    id=point_id,
+                    vector=vector,
+                    payload=payload,
+                ))
+            
+            # Upsert batch
+            try:
+                upserted = upsert_points(client, collection, points)
+                pushed_doc += upserted
+                logger.debug("push_batch_done", doc_hash=doc_hash, batch=len(points))
+            except Exception as e:
+                logger.error("push_upsert_failed", doc_hash=doc_hash, error=str(e))
+                per_doc[doc_hash] = {"pushed": pushed_doc, "chunks": len(all_chunks), "status": "upsert_error", "error": str(e)}
+                break
+        
+        pushed_total += pushed_doc
+        
+        # Determine status
+        if pushed_doc >= len(all_chunks) and len(all_chunks) > 0:
+            status = "present"
+        elif pushed_doc > 0:
+            status = "partial"
+        else:
+            status = "error"
+        
+        # Update manifest
+        if mark_manifest_vector_fn and pushed_doc > 0:
+            try:
+                mark_manifest_vector_fn(doc_hash, collection, status)
+                logger.debug("push_manifest_updated", doc_hash=doc_hash, status=status)
+            except Exception as e:
+                logger.error("push_manifest_update_failed", doc_hash=doc_hash, error=str(e))
+        
+        per_doc[doc_hash] = {
+            "pushed": pushed_doc,
+            "chunks": len(all_chunks),
+            "status": status,
+        }
+    
+    skipped = len([h for h in doc_hashes if not chunks_by_hash.get(h)])
+    
+    logger.info("push_done", pushed=pushed_total, skipped=skipped)
+    
+    return {
+        "pushed": pushed_total,
+        "skipped": skipped,
+        "per_doc": per_doc,
+    }
 
 
 def main():

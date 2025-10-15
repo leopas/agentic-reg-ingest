@@ -1,0 +1,13 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2025 Leopoldo Carvalho Correia de Lima
+
+repos:
+  - repo: local
+    hooks:
+      - id: ensure-spdx
+        name: Ensure SPDX MIT header
+        entry: bash -c 'for f in "$@"; do if file "$f" | grep -q text; then grep -q "SPDX-License-Identifier: MIT" "$f" || (echo "❌ Missing SPDX in $f" && exit 1); fi; done' --
+        language: system
+        files: '\.(py|js|ts|tsx|jsx|sh|sql|html|css|ya?ml|md)$'
+        exclude: '^(LICENSE|\.venv/|node_modules/|\.git/)'
+

@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2025 Leopoldo Carvalho Correia de Lima
+
 """URL normalization utilities."""
 
 from urllib.parse import urlparse, urlunparse

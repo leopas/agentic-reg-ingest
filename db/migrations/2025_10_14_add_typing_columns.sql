@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2025 Leopoldo Carvalho Correia de Lima
+
 -- Migration: Add typing columns to search_result and document_catalog tables
 -- Date: 2025-10-14
 -- Purpose: Robust document type detection and routing

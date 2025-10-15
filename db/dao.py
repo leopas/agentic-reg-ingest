@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2025 Leopoldo Carvalho Correia de Lima
+
 """Data Access Objects for database operations."""
 
 import json
@@ -537,7 +540,7 @@ class ChunkStoreDAO:
             ChunkStoreDAO.create_chunk(
                 session,
                 doc_hash=doc_hash,
-                chunk_id=chunk_data.get("chunk_id", f"{doc_hash}:{idx}"),
+                chunk_id=chunk_data.get("chunk_id", str(idx)),  # Just index, not doc_hash:idx
                 chunk_index=idx,
                 text_content=chunk_data.get("text", chunk_data.get("text_content", "")),
                 tokens=chunk_data.get("tokens"),
@@ -546,4 +549,97 @@ class ChunkStoreDAO:
             )
         session.flush()
         return len(chunks)
+    
+    @staticmethod
+    def get_chunks_by_hashes(session: Session, doc_hashes: List[str]) -> Dict[str, List[Dict[str, Any]]]:
+        """
+        Get all chunks for multiple doc_hashes.
+        
+        Returns:
+            Dictionary mapping doc_hash to list of chunk dicts
+        """
+        if not doc_hashes:
+            return {}
+        
+        stmt = select(ChunkStore).where(ChunkStore.doc_hash.in_(doc_hashes))
+        chunks = list(session.scalars(stmt))
+        
+        # Group by doc_hash
+        result = {}
+        for chunk in chunks:
+            if chunk.doc_hash not in result:
+                result[chunk.doc_hash] = []
+            
+            # Convert to dict
+            chunk_dict = {
+                "chunk_id": chunk.chunk_id,
+                "chunk_index": chunk.chunk_index,
+                "text": chunk.text_content,
+                "tokens": chunk.tokens,
+                "anchors": json.loads(chunk.anchors) if chunk.anchors else None,
+                "metadata": json.loads(chunk.chunk_metadata) if chunk.chunk_metadata else {},
+                "doc_hash": chunk.doc_hash,
+            }
+            result[chunk.doc_hash].append(chunk_dict)
+        
+        return result
+
+
+def get_chunks_by_hashes(doc_hashes: List[str]) -> Dict[str, List[Dict[str, Any]]]:
+    """
+    Standalone function to get chunks by hashes (for use in vector push).
+    
+    Args:
+        doc_hashes: List of document hashes
+        
+    Returns:
+        Dictionary mapping doc_hash to list of chunk dicts
+    """
+    from db.session import DatabaseSession
+    
+    db_session = DatabaseSession()
+    with next(db_session.get_session()) as session:
+        return ChunkStoreDAO.get_chunks_by_hashes(session, doc_hashes)
+
+
+def get_manifests_by_hashes(doc_hashes: List[str]) -> Dict[str, Dict[str, Any]]:
+    """
+    Get manifests for multiple doc_hashes.
+    
+    Returns:
+        Dictionary mapping doc_hash to manifest dict
+    """
+    from db.session import DatabaseSession
+    
+    db_session = DatabaseSession()
+    with next(db_session.get_session()) as session:
+        manifests = ChunkManifestDAO.get_by_doc_hashes(session, doc_hashes)
+        
+        result = {}
+        for manifest in manifests:
+            result[manifest.doc_hash] = {
+                "url_norm": manifest.canonical_url,
+                "title": None,  # Not stored in manifest, would need to join with DocumentCatalog
+                "source_type": manifest.doc_type,
+                "meta": json.loads(manifest.meta) if manifest.meta else {},
+            }
+        
+        return result
+
+
+def mark_manifest_vector(doc_hash: str, collection: str, status: str) -> None:
+    """
+    Update manifest vector status.
+    
+    Args:
+        doc_hash: Document hash
+        collection: Collection name
+        status: Vector status (present, partial, error, none)
+    """
+    from db.session import DatabaseSession
+    
+    db_session = DatabaseSession()
+    with next(db_session.get_session()) as session:
+        ChunkManifestDAO.update_vector_status(session, doc_hash, status, collection)
+        session.commit()
 

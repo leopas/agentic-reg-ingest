@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: MIT | (c) 2025 Leopoldo Carvalho Correia de Lima -->
+
 # ✅ Checklist de Setup Rápido
 
 Use este checklist para garantir que tudo está configurado antes de rodar o debug.

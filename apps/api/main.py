@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2025 Leopoldo Carvalho Correia de Lima
+
 """FastAPI application for agentic-reg-ingest."""
 
 import os
@@ -12,6 +15,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from apps.api.middleware import LoggingMiddleware
+from apps.api.routes_chat import router as chat_router
 from common.env_readers import load_yaml_with_env
 from common.settings import settings
 from db.session import DatabaseSession
@@ -49,6 +53,9 @@ app = FastAPI(
 
 # Add middleware
 app.add_middleware(LoggingMiddleware)
+
+# Include routers
+app.include_router(chat_router)
 
 # Mount static files for UI
 ui_static_dir = Path(__file__).parent.parent / "ui" / "static"
@@ -158,6 +165,7 @@ class VectorPushRequest(BaseModel):
     doc_hashes: list[str]
     collection: str = "kb_regulatory"
     overwrite: bool = False
+    batch_size: int = 64
 
 
 class VectorPushResponse(BaseModel):
@@ -780,17 +788,49 @@ async def get_chunks_status(urls: str | None = None, doc_hashes: str | None = No
 async def vector_push(request: VectorPushRequest):
     """
     Push chunks to VectorDB by doc_hashes.
+    
+    Flow:
+    1. Fetch chunks from chunk_store by doc_hashes
+    2. Generate embeddings for chunk texts
+    3. Create points with deterministic IDs (doc_hash:chunk_id)
+    4. Optionally overwrite (delete existing points first)
+    5. Upsert points to Qdrant collection
+    6. Update chunk_manifest with vector status
+    
+    Returns:
+        VectorPushResponse with pushed/skipped counts
     """
     try:
-        logger.info("api_vector_push_start", hashes=len(request.doc_hashes))
+        if not request.doc_hashes:
+            raise HTTPException(400, "doc_hashes is required")
         
-        # TODO: Implement vector push
+        logger.info("api_vector_push_start", hashes=len(request.doc_hashes), collection=request.collection)
+        
+        # Import dependencies
+        from db.dao import get_chunks_by_hashes, get_manifests_by_hashes, mark_manifest_vector
+        from vector.qdrant_loader import push_doc_hashes
+        
+        # Execute push
+        result = push_doc_hashes(
+            doc_hashes=request.doc_hashes,
+            collection=request.collection,
+            batch_size=request.batch_size,
+            overwrite=request.overwrite,
+            fetch_chunks_fn=get_chunks_by_hashes,
+            fetch_manifests_fn=get_manifests_by_hashes,
+            mark_manifest_vector_fn=mark_manifest_vector,
+        )
+        
+        logger.info("api_vector_push_done", pushed=result["pushed"], skipped=result["skipped"])
+        
         return VectorPushResponse(
-            pushed=0,
-            skipped=len(request.doc_hashes),
+            pushed=result["pushed"],
+            skipped=result["skipped"],
             collection=request.collection,
         )
     
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error("api_vector_push_failed", error=str(e))
         raise HTTPException(status_code=500, detail=str(e))
@@ -800,16 +840,45 @@ async def vector_push(request: VectorPushRequest):
 async def vector_delete(request: VectorDeleteRequest):
     """
     Delete chunks from VectorDB by doc_hashes.
+    
+    Flow:
+    1. Delete all points from Qdrant where payload.doc_hash matches
+    2. Update chunk_manifest to set vector_status='none'
+    3. Clear last_pushed_at and last_pushed_collection
+    
+    Returns:
+        VectorDeleteResponse with deleted count
     """
     try:
-        logger.info("api_vector_delete_start", hashes=len(request.doc_hashes))
+        if not request.doc_hashes:
+            raise HTTPException(400, "doc_hashes is required")
         
-        # TODO: Implement vector delete
+        logger.info("api_vector_delete_start", hashes=len(request.doc_hashes), collection=request.collection)
+        
+        # Import dependencies
+        from vector.qdrant_client import delete_by_doc_hashes, get_client
+        from db.dao import mark_manifest_vector
+        
+        # Delete from Qdrant
+        client = get_client()
+        deleted = delete_by_doc_hashes(client, request.collection, request.doc_hashes)
+        
+        # Update manifests
+        for doc_hash in request.doc_hashes:
+            try:
+                mark_manifest_vector(doc_hash, request.collection, "none")
+            except Exception as e:
+                logger.warning("delete_manifest_update_failed", doc_hash=doc_hash, error=str(e))
+        
+        logger.info("api_vector_delete_done", deleted=deleted)
+        
         return VectorDeleteResponse(
-            deleted=0,
+            deleted=deleted,
             collection=request.collection,
         )
     
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error("api_vector_delete_failed", error=str(e))
         raise HTTPException(status_code=500, detail=str(e))
@@ -826,13 +895,27 @@ async def ui_console():
     return FileResponse(ui_file)
 
 
+@app.get("/chat", include_in_schema=False)
+async def chat_ui():
+    """Serve RAG Chat UI."""
+    chat_file = Path(__file__).parent.parent / "ui" / "static" / "chat.html"
+    
+    if not chat_file.exists():
+        raise HTTPException(status_code=404, detail="Chat UI not found")
+    
+    return FileResponse(chat_file)
+
+
 @app.get("/")
 async def root():
     """Root endpoint."""
     return {
         "service": "agentic-reg-ingest",
         "version": "2.0.0",
-        "ui": "http://localhost:8000/ui",
+        "ui": {
+            "agentic_console": "http://localhost:8000/ui",
+            "rag_chat": "http://localhost:8000/chat",
+        },
         "endpoints": {
             "health": "/health",
             "search": "POST /run/search",
@@ -840,7 +923,13 @@ async def root():
             "agentic_plan": "POST /agentic/plan",
             "agentic_run": "POST /agentic/run",
             "agentic_iters": "GET /agentic/iters/{plan_id}",
+            "chat_ask": "POST /chat/ask",
+            "vector_push": "POST /vector/push",
+            "vector_delete": "POST /vector/delete",
+            "approved": "GET /agentic/approved",
+            "regenerate": "POST /ingest/regenerate",
             "ui_console": "GET /ui",
+            "rag_chat_ui": "GET /chat",
         },
     }
 

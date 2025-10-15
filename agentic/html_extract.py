@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2025 Leopoldo Carvalho Correia de Lima
+
 """HTML extraction utilities with readability and PDF wrapper detection."""
 
 import re

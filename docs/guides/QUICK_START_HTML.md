@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: MIT | (c) 2025 Leopoldo Carvalho Correia de Lima -->
+
 # ⚡ Quick Start - Buscar HTMLs
 
 ## 🎯 **Seu Caso: Precisa de HTMLs**
