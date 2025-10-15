@@ -872,3 +872,7 @@ See [LICENSE](./LICENSE) file for full text.
 **Built with ❤️ by Leopoldo Carvalho Correia de Lima**  
 **For regulatory compliance and knowledge management**
 
+## Acknowledgments
+Special thanks to TIExames for providing the context and audience for the original class where this project was demonstrated. This project is an independent open-source effort licensed under MIT.
+
+
