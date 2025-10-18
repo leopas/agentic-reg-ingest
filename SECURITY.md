@@ -7,7 +7,7 @@
 **Do NOT** open a public issue for security vulnerabilities.
 
 **Instead:**
-1. Email: [Adicionar email seguro]
+1. Email: leopoldo.de.lima@gmail.com
 2. Include:
    - Description of vulnerability
    - Steps to reproduce
