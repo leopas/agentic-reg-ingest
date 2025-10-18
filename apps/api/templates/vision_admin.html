@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administração | Vision Enrichment</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .nav {
+            background: #333;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .nav a {
+            color: white;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+
+        .nav a:hover {
+            background: #555;
+        }
+
+        .nav a.active {
+            background: #0066cc;
+        }
+
+        .admin-container {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            height: calc(100vh - 60px);
+        }
+
+        .sidebar {
+            background: white;
+            border-right: 1px solid #ddd;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .sidebar-header {
+            margin-bottom: 20px;
+        }
+
+        .sidebar-header h2 {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .filters {
+            margin-bottom: 20px;
+        }
+
+        .filters input,
+        .filters select {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .upload-card {
+            background: #f9f9f9;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .upload-card>div:first-child {
+            flex: 1;
+        }
+
+        .upload-card:hover {
+            border-color: #0066cc;
+            background: #f0f7ff;
+        }
+
+        .upload-card.selected {
+            border-color: #0066cc;
+            background: #e6f2ff;
+        }
+
+        .upload-card-title {
+            font-weight: 500;
+            font-size: 14px;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .upload-card-meta {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 6px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .status-badge.completed {
+            background: #28a745;
+            color: white;
+        }
+
+        .status-badge.awaiting_review {
+            background: #ffc107;
+            color: #000;
+        }
+
+        .status-badge.processing {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .status-badge.failed {
+            background: #dc3545;
+            color: white;
+        }
+
+        .status-badge.uploaded {
+            background: #6c757d;
+            color: white;
+        }
+
+        .details-panel {
+            padding: 30px;
+            overflow-y: auto;
+            background: white;
+        }
+
+        .details-header {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .details-header h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .stat-box {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 32px;
+            font-weight: bold;
+            color: #0066cc;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .url-section {
+            margin-top: 30px;
+        }
+
+        .url-section h3 {
+            margin-bottom: 15px;
+        }
+
+        .url-item {
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 10px;
+        }
+
+        .url-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+
+        .url-title {
+            font-weight: 500;
+            color: #0066cc;
+            flex: 1;
+        }
+
+        .url-badges {
+            display: flex;
+            gap: 5px;
+        }
+
+        .url-link {
+            font-size: 12px;
+            color: #666;
+            word-break: break-all;
+            margin-bottom: 8px;
+        }
+
+        .url-snippet {
+            font-size: 13px;
+            color: #333;
+            line-height: 1.4;
+            margin-bottom: 10px;
+        }
+
+        .url-status-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 10px;
+            font-size: 13px;
+        }
+
+        .url-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .url-actions button {
+            padding: 6px 12px;
+            font-size: 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            background: #6c757d;
+            color: white;
+        }
+
+        .url-actions button:hover {
+            opacity: 0.8;
+        }
+
+        .url-actions button.primary {
+            background: #0066cc;
+        }
+
+        .url-actions button.success {
+            background: #28a745;
+        }
+
+        .url-actions button.danger {
+            background: #dc3545;
+        }
+
+        .delete-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 11px;
+            margin-left: 8px;
+        }
+
+        .delete-btn:hover {
+            background: #c82333;
+        }
+
+        .preview-box {
+            background: white;
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            display: none;
+        }
+
+        .preview-box.visible {
+            display: block;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #0066cc;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="nav">
+        <span style="font-weight: bold; font-size: 18px;">🔍 Vision Enrichment</span>
+        <a href="/ui/vision-enrichment">📤 Upload</a>
+        <a href="/ui/vision-admin" class="active">⚙️ Administração</a>
+        <a href="/chat">💬 RAG Chat</a>
+    </div>
+
+    <div class="admin-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h2>📁 Uploads</h2>
+            </div>
+
+            <div class="filters">
+                <input type="text" id="searchInput" placeholder="🔍 Buscar por nome ou ID..." onkeyup="applyFilters()">
+
+                <select id="statusFilter" onchange="applyFilters()">
+                    <option value="">Todos os status</option>
+                    <option value="uploaded">Uploaded</option>
+                    <option value="processing">Processing</option>
+                    <option value="awaiting_review">Aguardando Revisão</option>
+                    <option value="completed">Completed</option>
+                    <option value="failed">Failed</option>
+                </select>
+            </div>
+
+            <div id="uploadList">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Carregando...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Details Panel -->
+        <div class="details-panel" id="detailsPanel">
+            <div class="empty-state">
+                <div class="empty-state-icon">📋</div>
+                <h3>Selecione um upload</h3>
+                <p>Clique em um upload na barra lateral para ver os detalhes</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedUploadId = null;
+
+        // Load uploads on page load
+        window.onload = function () {
+            loadUploads();
+        };
+
+        // Apply filters
+        function applyFilters() {
+            const search = document.getElementById('searchInput').value;
+            const status = document.getElementById('statusFilter').value;
+            loadUploads(status, search);
+        }
+
+        // Load uploads list
+        async function loadUploads(status = '', search = '') {
+            try {
+                const params = new URLSearchParams();
+                if (status) params.append('status', status);
+                if (search) params.append('search', search);
+
+                const response = await fetch(`/vision/admin/uploads?${params}`);
+                const data = await response.json();
+
+                renderUploadList(data.uploads);
+
+            } catch (error) {
+                console.error('Failed to load uploads:', error);
+                document.getElementById('uploadList').innerHTML = `
+                    <div class="empty-state">
+                        <p style="color: #dc3545;">Erro ao carregar uploads</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Render upload list
+        function renderUploadList(uploads) {
+            if (uploads.length === 0) {
+                document.getElementById('uploadList').innerHTML = `
+                    <div class="empty-state">
+                        <p>Nenhum upload encontrado</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            uploads.forEach(upload => {
+                const selected = upload.upload_id === selectedUploadId ? 'selected' : '';
+                html += `
+                    <div class="upload-card ${selected}">
+                        <div onclick="selectUpload('${upload.upload_id}')">
+                            <div class="upload-card-title">${upload.filename}</div>
+                            <div class="upload-card-meta">
+                                ${new Date(upload.created_at).toLocaleDateString('pt-BR')}
+                                ${upload.url_count > 0 ? `· ${upload.url_count} URLs` : ''}
+                            </div>
+                            <span class="status-badge ${upload.status}">${upload.status}</span>
+                        </div>
+                        <button class="delete-btn" onclick="event.stopPropagation(); deleteUpload('${upload.upload_id}', '${upload.filename}')" title="Excluir upload">🗑️</button>
+                    </div>
+                `;
+            });
+
+            document.getElementById('uploadList').innerHTML = html;
+        }
+
+        // Select upload and load details
+        async function selectUpload(uploadId) {
+            selectedUploadId = uploadId;
+
+            // Update sidebar selection
+            document.querySelectorAll('.upload-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            event.target.closest('.upload-card').classList.add('selected');
+
+            // Load details
+            document.getElementById('detailsPanel').innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Carregando detalhes...</p>
+                </div>
+            `;
+
+            try {
+                const response = await fetch(`/vision/admin/upload-details/${uploadId}`);
+                const data = await response.json();
+
+                renderDetails(data);
+
+            } catch (error) {
+                console.error('Failed to load details:', error);
+                document.getElementById('detailsPanel').innerHTML = `
+                    <div class="empty-state">
+                        <p style="color: #dc3545;">Erro ao carregar detalhes</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Render upload details
+        function renderDetails(data) {
+            const upload = data.upload;
+            const urls = data.urls;
+            const stats = data.stats;
+
+            let html = `
+                <div class="details-header">
+                    <div>
+                        <h1>📄 ${upload.filename}</h1>
+                        <p style="color: #666; margin: 5px 0;">Upload ID: <code>${upload.upload_id}</code></p>
+                        ${upload.plan_id ? `<p style="color: #666;">Plan ID: <code>${upload.plan_id}</code></p>` : ''}
+                        <span class="status-badge ${upload.status}" style="font-size: 14px; margin-top: 10px;">${upload.status}</span>
+                    </div>
+                    <button onclick="deleteUpload('${upload.upload_id}', '${upload.filename}')" 
+                            style="background: #dc3545; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 14px;">
+                        🗑️ Excluir Upload
+                    </button>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-box">
+                        <div class="stat-number">${stats.total_urls}</div>
+                        <div class="stat-label">URLs Aprovadas</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-number">${stats.scraped}</div>
+                        <div class="stat-label">Scraped</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-number">${stats.total_chunks}</div>
+                        <div class="stat-label">Chunks</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-number">${stats.vectorized}</div>
+                        <div class="stat-label">Vectorized</div>
+                    </div>
+                </div>
+                
+                <div class="url-section">
+                    <h3>🔗 URLs Aprovadas (${urls.length})</h3>
+            `;
+
+            if (urls.length === 0) {
+                html += '<p style="color: #999;">Nenhuma URL aprovada ainda</p>';
+            } else {
+                urls.forEach((url, index) => {
+                    const scrapeIcon = url.scrape_status === 'done' ? '✅' :
+                        url.scrape_status === 'queued' ? '⏳' :
+                            url.scrape_status === 'failed' ? '❌' : '⚪';
+                    const vectorIcon = url.vector_status === 'present' ? '✅' : '⚪';
+
+                    html += `
+                        <div class="url-item">
+                            <div class="url-header">
+                                <div class="url-title">${url.title}</div>
+                                <div class="url-badges">
+                                    <span class="status-badge">${url.final_type.toUpperCase()}</span>
+                                    <span class="status-badge">${url.domain}</span>
+                                    <span class="status-badge">Score: ${url.score.toFixed(2)}</span>
+                                </div>
+                            </div>
+                            <div class="url-link">${url.url}</div>
+                            <div class="url-snippet">${url.snippet}</div>
+                            <div class="url-status-row">
+                                <span>${scrapeIcon} Scrape: <strong>${url.scrape_status}</strong></span>
+                                <span>📦 Chunks: <strong>${url.chunk_count}</strong></span>
+                                <span>${vectorIcon} Vector: <strong>${url.vector_status}</strong></span>
+                            </div>
+                            <div class="url-actions">
+                                ${url.doc_hash ? `
+                                    <button onclick="togglePreview('${url.doc_hash}', ${index})" class="primary">
+                                        👁️ Preview
+                                    </button>
+                                ` : ''}
+                                ${url.scrape_status !== 'done' ? `
+                                    <button onclick="reScrapeURL('${upload.upload_id}', '${url.url}')" class="success">
+                                        🔄 Re-scrape
+                                    </button>
+                                ` : ''}
+                                ${url.doc_hash && url.vector_status !== 'present' ? `
+                                    <button onclick="pushToVector(['${url.doc_hash}'])" class="success">
+                                        🗄️ Push Vector
+                                    </button>
+                                ` : ''}
+                            </div>
+                            <div class="preview-box" id="preview_${index}"></div>
+                        </div>
+                    `;
+                });
+            }
+
+            html += '</div>';
+
+            document.getElementById('detailsPanel').innerHTML = html;
+        }
+
+        // Toggle content preview
+        async function togglePreview(docHash, index) {
+            const previewBox = document.getElementById(`preview_${index}`);
+
+            if (previewBox.classList.contains('visible')) {
+                previewBox.classList.remove('visible');
+                previewBox.innerHTML = '';
+                return;
+            }
+
+            // Load preview
+            previewBox.innerHTML = '<div class="loading"><div class="spinner"></div> Carregando...</div>';
+            previewBox.classList.add('visible');
+
+            try {
+                const response = await fetch(`/vision/admin/chunk-preview/${docHash}`);
+                const data = await response.json();
+
+                previewBox.innerHTML = data.preview;
+
+            } catch (error) {
+                previewBox.innerHTML = `<span style="color: #dc3545;">Erro ao carregar preview</span>`;
+            }
+        }
+
+        // Re-scrape URL
+        async function reScrapeURL(uploadId, url) {
+            if (!confirm(`Confirma re-scraping de:\n${url}?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/vision/admin/re-scrape`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        upload_id: uploadId,
+                        urls: [url]
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to re-scrape');
+                }
+
+                alert('✓ Re-scraping iniciado!');
+
+                // Reload details after 2s
+                setTimeout(() => selectUpload(uploadId), 2000);
+
+            } catch (error) {
+                alert(`✗ Erro: ${error.message}`);
+            }
+        }
+
+        // Push to vector
+        async function pushToVector(docHashes) {
+            try {
+                const response = await fetch(`/vector/push`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        doc_hashes: docHashes,
+                        collection: 'kb_regulatory',
+                        overwrite: false
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to push');
+                }
+
+                const result = await response.json();
+                alert(`✓ Pushed: ${result.pushed}, Skipped: ${result.skipped}`);
+
+                // Reload details
+                if (selectedUploadId) {
+                    setTimeout(() => selectUpload(selectedUploadId), 2000);
+                }
+
+            } catch (error) {
+                alert(`✗ Erro: ${error.message}`);
+            }
+        }
+
+        // Delete upload
+        async function deleteUpload(uploadId, filename) {
+            if (!confirm(`⚠️ ATENÇÃO!\n\nTem certeza que deseja excluir este upload?\n\nArquivo: ${filename}\nUpload ID: ${uploadId}\n\nEsta ação irá:\n✗ Remover o arquivo original\n✗ Remover o JSONL gerado\n✗ Remover os TXTs scrapeados\n✗ Remover registros do banco de dados\n✗ Remover chunks do Qdrant (se houver)\n\n⚠️ ESTA AÇÃO NÃO PODE SER DESFEITA!`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/vision/admin/delete/${uploadId}`, {
+                    method: 'DELETE'
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    alert(`❌ Erro ao excluir: ${error.detail || 'Erro desconhecido'}`);
+                    return;
+                }
+
+                const result = await response.json();
+                alert(`✅ Upload excluído com sucesso!\n\n${result.message}`);
+
+                // Clear details if this upload was selected
+                if (selectedUploadId === uploadId) {
+                    selectedUploadId = null;
+                    document.getElementById('detailsPanel').innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📋</div>
+                            <p>Selecione um upload na lista ao lado</p>
+                        </div>
+                    `;
+                }
+
+                // Reload upload list
+                await loadUploads();
+
+            } catch (error) {
+                console.error('Failed to delete upload:', error);
+                alert(`❌ Erro ao excluir upload: ${error.message}`);
+            }
+        }
+
+        // Initialize on load
+        loadUploads();
+    </script>
+</body>
+
+</html>

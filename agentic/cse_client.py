@@ -6,7 +6,10 @@
 from typing import Any, Dict, List, Optional
 
 import requests
+import structlog
 from tenacity import retry, stop_after_attempt, wait_exponential
+
+logger = structlog.get_logger()
 
 
 class CSEClient:
@@ -78,27 +81,40 @@ class CSEClient:
         query: str,
         max_results: int = 100,
         results_per_page: int = 10,
+        include_domains: Optional[List[str]] = None,
+        exclude_domains: Optional[List[str]] = None,
         **kwargs: Any,
     ) -> List[Dict[str, Any]]:
         """
         Execute paginated search to collect multiple results.
         
+        Suporta allow-list dinâmico por requisição usando site: operators.
+        
         Args:
             query: Search query string
             max_results: Maximum total results to retrieve
             results_per_page: Results per API call (max 10)
+            include_domains: Domains to include (dynamic allow-list)
+            exclude_domains: Domains to exclude
             **kwargs: Additional CSE API parameters
             
         Returns:
             List of search result items
         """
+        # ✅ Build query with dynamic allow-list
+        final_query = self._build_query_with_allowlist(
+            query,
+            include_domains or [],
+            exclude_domains or [],
+        )
+        
         all_items = []
         start = 1
         
         while len(all_items) < max_results:
             try:
                 response = self.search(
-                    query=query,
+                    query=final_query,  # ← Query modificada com site: operators
                     start=start,
                     num=min(results_per_page, 10),
                     **kwargs,
@@ -124,4 +140,50 @@ class CSEClient:
                 break
         
         return all_items[:max_results]
+    
+    def _build_query_with_allowlist(
+        self,
+        query: str,
+        include_domains: List[str],
+        exclude_domains: List[str],
+    ) -> str:
+        """
+        Build query with site: operators for dynamic allow-list.
+        
+        PSE permite allow-list dinâmico POR REQUISIÇÃO usando site: operator.
+        Não altera configuração do motor, apenas modifica a query.
+        
+        Args:
+            query: Base query
+            include_domains: Domains to include
+            exclude_domains: Domains to exclude
+            
+        Returns:
+            Modified query string
+        """
+        parts = [query]
+        
+        # ✅ Include domains (OR logic)
+        if include_domains:
+            site_clauses = [f"site:{d}" for d in include_domains]
+            include_expr = "(" + " OR ".join(site_clauses) + ")"
+            parts.append(include_expr)
+        
+        # ✅ Exclude domains
+        if exclude_domains:
+            for domain in exclude_domains:
+                parts.append(f"-site:{domain}")
+        
+        final_query = " ".join(parts)
+        
+        if include_domains or exclude_domains:
+            logger.info(
+                "cse_allowlist_dynamic",
+                original_query=query,
+                final_query=final_query,
+                include_domains=len(include_domains),
+                exclude_domains=len(exclude_domains),
+            )
+        
+        return final_query
 

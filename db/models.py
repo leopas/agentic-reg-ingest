@@ -123,6 +123,14 @@ class ChunkManifest(Base):
         nullable=False
     )
     
+    # Source pipeline tracking (added 2025-10-17)
+    source_pipeline = Column(
+        Enum('regular', 'enrichment', 'manual', name='source_pipeline_enum'),
+        default='regular',
+        nullable=False,
+        index=True
+    )
+    
     # Relationship
     chunks = relationship("ChunkStore", back_populates="manifest", cascade="all, delete-orphan")
 
@@ -145,3 +153,61 @@ class ChunkStore(Base):
     # Relationship
     manifest = relationship("ChunkManifest", back_populates="chunks")
 
+
+class JudgeCache(Base):
+    """Cache for LLM judge decisions on URLs."""
+    
+    __tablename__ = "judge_cache"
+    
+    url_hash = Column(String(64), primary_key=True)
+    url = Column(String(2048), nullable=False)
+    decision = Column(
+        Enum('approved', 'rejected', name='judge_decision_enum'),
+        nullable=False
+    )
+    reason = Column(Text, nullable=True)
+    violations = Column(Text, nullable=True)  # JSON array
+    plan_goal_hash = Column(String(64), nullable=False, index=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    expires_at = Column(DateTime, nullable=False, index=True)
+
+
+class VisionUpload(Base):
+    """Vision enrichment upload tracking."""
+    
+    __tablename__ = "vision_upload"
+    
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    upload_id = Column(String(64), nullable=False, unique=True, index=True)
+    original_filename = Column(String(512), nullable=False)
+    file_path = Column(String(1024), nullable=False)
+    file_hash = Column(String(64), nullable=False, index=True)
+    file_size = Column(BigInteger, nullable=False)
+    mime_type = Column(String(128), nullable=True)
+    
+    # Pipeline status
+    status = Column(
+        Enum('uploaded', 'processing', 'awaiting_review', 'completed', 'failed', name='upload_status_enum'),
+        default='uploaded',
+        nullable=False,
+        index=True
+    )
+    
+    # Stage tracking
+    stage_ocr = Column(String(50), default='pending')  # pending, running, completed, failed
+    stage_multimodal = Column(String(50), default='pending')
+    stage_allowlist = Column(String(50), default='pending')
+    stage_agentic = Column(String(50), default='pending')
+    stage_scrape = Column(String(50), default='pending')
+    stage_vector = Column(String(50), default='pending')
+    
+    # Output artifacts
+    jsonl_path = Column(String(1024), nullable=True)
+    txt_output_dir = Column(String(1024), nullable=True)
+    plan_id = Column(String(64), nullable=True)
+    
+    # Metadata
+    error_message = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    completed_at = Column(DateTime, nullable=True)

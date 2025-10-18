@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visão + Enriquecimento | Agentic Reg Ingest</title>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .upload-section {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 6px;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        input[type="file"] {
+            width: 100%;
+            padding: 10px;
+            border: 2px dashed #ddd;
+            border-radius: 4px;
+            background: white;
+        }
+
+        button {
+            background: #0066cc;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #0052a3;
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .button-secondary {
+            background: #6c757d;
+        }
+
+        .button-secondary:hover {
+            background: #5a6268;
+        }
+
+        .button-success {
+            background: #28a745;
+        }
+
+        .button-success:hover {
+            background: #218838;
+        }
+
+        .status-section {
+            display: none;
+            margin-top: 30px;
+        }
+
+        .status-section.active {
+            display: block;
+        }
+
+        .progress-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .progress-card {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .progress-card.pending {
+            border-color: #ddd;
+            opacity: 0.6;
+        }
+
+        .progress-card.running {
+            border-color: #ffc107;
+            background: #fff8e1;
+        }
+
+        .progress-card.completed {
+            border-color: #28a745;
+            background: #d4edda;
+        }
+
+        .progress-card.failed {
+            border-color: #dc3545;
+            background: #f8d7da;
+        }
+
+        .progress-card h3 {
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .progress-icon {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-badge.pending {
+            background: #e0e0e0;
+            color: #666;
+        }
+
+        .status-badge.running {
+            background: #ffc107;
+            color: #000;
+        }
+
+        .status-badge.completed {
+            background: #28a745;
+            color: white;
+        }
+
+        .status-badge.failed {
+            background: #dc3545;
+            color: white;
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .message {
+            padding: 12px;
+            border-radius: 4px;
+            margin: 15px 0;
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .message.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .meta-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 15px 0;
+            font-size: 14px;
+        }
+
+        .meta-info p {
+            margin: 5px 0;
+            color: #666;
+        }
+
+        .meta-info strong {
+            color: #333;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #0066cc;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 8px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .url-review-section {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 6px;
+            margin: 20px 0;
+        }
+
+        .url-list {
+            max-height: 400px;
+            overflow-y: auto;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+        }
+
+        .url-item {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .url-item:last-child {
+            border-bottom: none;
+        }
+
+        .url-item input[type="checkbox"] {
+            margin-top: 4px;
+            width: 18px;
+            height: 18px;
+        }
+
+        .url-details {
+            flex: 1;
+        }
+
+        .url-title {
+            font-weight: 500;
+            color: #0066cc;
+            margin-bottom: 4px;
+        }
+
+        .url-link {
+            font-size: 12px;
+            color: #666;
+            word-break: break-all;
+            margin-bottom: 4px;
+        }
+
+        .url-snippet {
+            font-size: 13px;
+            color: #333;
+            line-height: 1.4;
+        }
+
+        .url-meta {
+            display: flex;
+            gap: 10px;
+            margin-top: 6px;
+            font-size: 12px;
+        }
+
+        .url-badge {
+            background: #e0e0e0;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+        }
+
+        .url-badge.pdf {
+            background: #dc3545;
+            color: white;
+        }
+
+        .url-badge.html {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .select-controls {
+            margin: 10px 0;
+            display: flex;
+            gap: 10px;
+        }
+
+        .select-controls button {
+            padding: 8px 16px;
+            font-size: 13px;
+        }
+    </style>
+</head>
+
+<body>
+    <div style="background: #333; color: white; padding: 12px 20px; display: flex; gap: 20px; align-items: center;">
+        <span style="font-weight: bold;">🔍 Vision Enrichment</span>
+        <a href="/ui/vision-enrichment" style="color: white; text-decoration: none; padding: 6px 12px; background: #0066cc; border-radius: 4px;">📤 Upload</a>
+        <a href="/ui/vision-admin" style="color: white; text-decoration: none; padding: 6px 12px; border-radius: 4px;">⚙️ Administração</a>
+        <a href="/chat" style="color: white; text-decoration: none; padding: 6px 12px; border-radius: 4px;">💬 Chat</a>
+    </div>
+    
+    <div class="container">
+        <h1>🔍 Visão + Enriquecimento</h1>
+        <p class="subtitle">
+            Upload de documentos → OCR/Multimodal → Allowlist GPT → Agentic Search → Scraping → Vector DB
+        </p>
+
+        <!-- Upload Section -->
+        <div class="upload-section">
+            <h2>Upload de Arquivo</h2>
+            <form id="uploadForm" hx-post="/vision/upload" hx-encoding="multipart/form-data" hx-target="#uploadResult"
+                hx-swap="innerHTML">
+                <div class="form-group">
+                    <label for="files">Selecione arquivo (.pdf, .pptx, .zip):</label>
+                    <input type="file" id="files" name="files" accept=".pdf,.pptx,.ppt,.zip" required>
+                </div>
+                <button type="submit">
+                    📤 Upload
+                </button>
+            </form>
+            <div id="uploadResult"></div>
+        </div>
+
+        <!-- Status Section (initially hidden) -->
+        <div id="statusSection" class="status-section">
+            <h2>Status do Pipeline</h2>
+            <div id="statusContent"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentUploadId = null;
+        let statusInterval = null;
+        let urlReviewOpen = false;  // Flag para pausar polling
+
+        // Handle upload response
+        document.body.addEventListener('htmx:afterRequest', function (evt) {
+            if (evt.detail.target.id === 'uploadResult') {
+                const xhr = evt.detail.xhr;
+                if (xhr.status === 200) {
+                    const response = JSON.parse(xhr.responseText);
+                    currentUploadId = response.upload_id;
+
+                    document.getElementById('uploadResult').innerHTML = `
+                        <div class="message success">
+                            <strong>✓ Upload concluído!</strong><br>
+                            Upload ID: <code>${response.upload_id}</code><br>
+                            ${response.message}
+                        </div>
+                        <button onclick="startPipeline()" class="button-success">
+                            ▶️ Rodar Pipeline
+                        </button>
+                    `;
+
+                    // Show status section
+                    document.getElementById('statusSection').classList.add('active');
+                } else {
+                    document.getElementById('uploadResult').innerHTML = `
+                        <div class="message error">
+                            <strong>✗ Erro no upload</strong><br>
+                            ${xhr.responseText}
+                        </div>
+                    `;
+                }
+            }
+        });
+
+        // Start pipeline (uses global currentUploadId)
+        async function startPipeline() {
+            if (!currentUploadId) {
+                alert('❌ Nenhum upload ativo. Faça upload de um arquivo primeiro.');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/vision/run/${currentUploadId}`, {
+                    method: 'POST'
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Failed to start pipeline');
+                }
+
+                document.getElementById('uploadResult').innerHTML = `
+                    <div class="message info">
+                        <strong>⏳ Pipeline iniciado!</strong><br>
+                        Upload ID: <code>${currentUploadId}</code><br>
+                        Processando... <span class="spinner"></span>
+                    </div>
+                `;
+
+                // Show status section and start polling
+                document.getElementById('statusSection').classList.add('active');
+                startStatusPolling(currentUploadId);
+
+            } catch (error) {
+                document.getElementById('uploadResult').innerHTML = `
+                    <div class="message error">
+                        <strong>✗ Erro ao iniciar pipeline</strong><br>
+                        ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        // Start status polling
+        function startStatusPolling(uploadId) {
+            currentUploadId = uploadId;
+            updateStatus(uploadId);
+
+            if (statusInterval) {
+                clearInterval(statusInterval);
+            }
+
+            statusInterval = setInterval(() => {
+                updateStatus(uploadId);
+            }, 3000);
+        }
+
+        // Update status
+        async function updateStatus(uploadId) {
+            // ✅ Pausar polling se revisão de URLs estiver aberta
+            if (urlReviewOpen) {
+                console.log('Polling paused: URL review is open');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/vision/status/${uploadId}`);
+                const data = await response.json();
+                
+                renderStatus(data);
+                
+                // Stop polling if completed or failed
+                if (data.status === 'completed' || data.status === 'failed') {
+                    clearInterval(statusInterval);
+                }
+                
+            } catch (error) {
+                console.error('Status update failed:', error);
+            }
+        }
+
+        // Render status
+        function renderStatus(data) {
+            const stages = [
+                { key: 'ocr', label: 'OCR', icon: '📄' },
+                { key: 'multimodal', label: 'Inferências Guiadas', icon: '🤖' },
+                { key: 'allowlist', label: 'Allowlist + Queries (GPT)', icon: '🎯' },
+                { key: 'agentic', label: 'Agentic Search', icon: '🔍' },
+                { key: 'scrape', label: 'Scrape → .txt', icon: '🌐' },
+                { key: 'vector', label: 'Chunking + Vector Push', icon: '🗄️' }
+            ];
+
+            let cardsHTML = '<div class="progress-cards">';
+
+            stages.forEach(stage => {
+                const stageStatus = data[`stage_${stage.key}`];
+                cardsHTML += `
+                    <div class="progress-card ${stageStatus}">
+                        <div class="progress-icon">${stage.icon}</div>
+                        <h3>${stage.label}</h3>
+                        <span class="status-badge ${stageStatus}">${stageStatus}</span>
+                    </div>
+                `;
+            });
+
+            cardsHTML += '</div>';
+
+            let metaHTML = `
+                <div class="meta-info">
+                    <p><strong>Status Geral:</strong> <span class="status-badge ${data.status}">${data.status}</span></p>
+                    <p><strong>Upload ID:</strong> ${data.upload_id}</p>
+                    ${data.plan_id ? `<p><strong>Plan ID:</strong> ${data.plan_id}</p>` : ''}
+                    ${data.error_message ? `<p><strong>Erro:</strong> ${data.error_message}</p>` : ''}
+                </div>
+            `;
+
+            let actionsHTML = '<div class="actions">';
+
+            if (data.jsonl_path) {
+                actionsHTML += `
+                    <button onclick="downloadJSONL('${data.upload_id}')">
+                        📥 Baixar JSONL
+                    </button>
+                `;
+            }
+
+            // ✅ NOVO: Mostrar URLs para revisão
+            if (data.status === 'awaiting_review' && data.stage_agentic === 'completed') {
+                actionsHTML += `
+                    <button onclick="showURLReview('${data.upload_id}')" class="button-success">
+                        📋 Revisar URLs Aprovadas
+                    </button>
+                `;
+            }
+
+            if (data.status === 'completed' && data.stage_vector !== 'completed') {
+                actionsHTML += `
+                    <button onclick="pushToVector('${data.upload_id}')" class="button-success">
+                        🗄️ Empurrar para VectorDB
+                    </button>
+                `;
+            }
+
+            if (data.stage_vector === 'running') {
+                actionsHTML += `
+                    <button disabled>
+                        🗄️ Vector Push em andamento... <span class="spinner"></span>
+                    </button>
+                `;
+            }
+
+            if (data.stage_vector === 'completed') {
+                actionsHTML += `
+                    <button disabled class="button-success">
+                        ✓ Vector Push Concluído
+                    </button>
+                `;
+            }
+
+            actionsHTML += '</div>';
+
+            // ✅ NOVO: Container para revisão de URLs
+            let urlReviewHTML = '<div id="urlReviewContainer"></div>';
+
+            document.getElementById('statusContent').innerHTML = cardsHTML + metaHTML + actionsHTML + urlReviewHTML;
+        }
+
+        // Download JSONL
+        function downloadJSONL(uploadId) {
+            window.location.href = `/vision/download/jsonl/${uploadId}`;
+        }
+
+        // Push to vector (uses global currentUploadId or from parameter)
+        async function pushToVector(uploadId) {
+            const targetId = uploadId || currentUploadId;
+
+            if (!targetId) {
+                alert('❌ Nenhum upload ativo.');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/vision/vector/push/${targetId}?collection=kb_regulatory`, {
+                    method: 'POST'
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to push to vector');
+                }
+
+                alert('✓ Vector push iniciado! O status será atualizado em breve.');
+
+                // Restart polling
+                startStatusPolling(targetId);
+
+            } catch (error) {
+                alert(`✗ Erro ao iniciar vector push: ${error.message}`);
+            }
+        }
+
+        // ✅ NOVO: Show URL review interface
+        async function showURLReview(uploadId) {
+            try {
+                // ✅ Pausar polling para não fechar a revisão
+                urlReviewOpen = true;
+                console.log('URL review opened - polling paused');
+                
+                const response = await fetch(`/vision/approved-urls/${uploadId}`);
+                const data = await response.json();
+                
+                if (!data.urls || data.urls.length === 0) {
+                    alert('❌ Nenhuma URL aprovada encontrada.');
+                    urlReviewOpen = false;
+                    return;
+                }
+                
+                renderURLReview(data);
+                
+            } catch (error) {
+                alert(`✗ Erro ao carregar URLs: ${error.message}`);
+                urlReviewOpen = false;
+            }
+        }
+
+        // Render URL review interface
+        function renderURLReview(data) {
+            let html = `
+                <div class="url-review-section">
+                    <h3>📋 URLs Aprovadas pelo Agentic Search (${data.total})</h3>
+                    <p style="color: #666; margin-bottom: 15px;">
+                        Revise e selecione as URLs que deseja fazer scraping e adicionar ao knowledge base.
+                    </p>
+                    
+                    <div class="select-controls">
+                        <button onclick="selectAllURLs()" class="button-secondary">✓ Selecionar Todas</button>
+                        <button onclick="deselectAllURLs()" class="button-secondary">✗ Desmarcar Todas</button>
+                        <button onclick="confirmScraping()" class="button-success">
+                            ▶️ Iniciar Scraping (${data.total} selecionadas)
+                        </button>
+                    </div>
+                    
+                    <div class="url-list" id="urlList">
+            `;
+
+            data.urls.forEach((url, index) => {
+                html += `
+                    <div class="url-item">
+                        <input type="checkbox" id="url_${index}" value="${url.url}" 
+                               ${url.selected ? 'checked' : ''} 
+                               onchange="updateSelectedCount()">
+                        <div class="url-details">
+                            <div class="url-title">${url.title}</div>
+                            <div class="url-link">${url.url}</div>
+                            <div class="url-snippet">${url.snippet}</div>
+                            <div class="url-meta">
+                                <span class="url-badge ${url.final_type}">${url.final_type.toUpperCase()}</span>
+                                <span class="url-badge">${url.domain}</span>
+                                <span class="url-badge">Score: ${url.score.toFixed(2)}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += `
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('urlReviewContainer').innerHTML = html;
+        }
+
+        // Select/deselect all URLs
+        function selectAllURLs() {
+            const checkboxes = document.querySelectorAll('#urlList input[type="checkbox"]');
+            checkboxes.forEach(cb => cb.checked = true);
+            updateSelectedCount();
+        }
+
+        function deselectAllURLs() {
+            const checkboxes = document.querySelectorAll('#urlList input[type="checkbox"]');
+            checkboxes.forEach(cb => cb.checked = false);
+            updateSelectedCount();
+        }
+
+        // Update selected count in button
+        function updateSelectedCount() {
+            const checkboxes = document.querySelectorAll('#urlList input[type="checkbox"]');
+            const selected = Array.from(checkboxes).filter(cb => cb.checked);
+
+            const button = document.querySelector('.url-review-section button.button-success');
+            if (button) {
+                button.textContent = `▶️ Iniciar Scraping (${selected.length} selecionadas)`;
+            }
+        }
+
+        // Confirm and start scraping
+        async function confirmScraping() {
+            const checkboxes = document.querySelectorAll('#urlList input[type="checkbox"]:checked');
+            const selectedURLs = Array.from(checkboxes).map(cb => cb.value);
+
+            if (selectedURLs.length === 0) {
+                alert('❌ Selecione pelo menos 1 URL para fazer scraping.');
+                return;
+            }
+
+            if (!confirm(`Confirma o scraping de ${selectedURLs.length} URLs?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/vision/scrape/${currentUploadId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ selected_urls: selectedURLs })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to start scraping');
+                }
+
+                alert(`✓ Scraping iniciado para ${selectedURLs.length} URLs!`);
+
+                // Hide review section and restart polling
+                document.getElementById('urlReviewContainer').innerHTML = '';
+                startStatusPolling(currentUploadId);
+
+            } catch (error) {
+                alert(`✗ Erro ao iniciar scraping: ${error.message}`);
+            }
+        }
+    </script>
+</body>
+
+</html>

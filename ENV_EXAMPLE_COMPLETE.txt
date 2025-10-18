@@ -1,0 +1,76 @@
+# ============================================
+# VISION ENRICHMENT - Configuração Completa
+# ============================================
+
+# --------------------------------------------
+# SEARCH ENGINE (CSE ou Vertex AI)
+# --------------------------------------------
+SEARCH_ENGINE=cse
+# Opções: "cse" (simples) ou "vertex" (avançado com CRUD de allowlist)
+
+# --------------------------------------------
+# Google Custom Search (se SEARCH_ENGINE=cse)
+# --------------------------------------------
+GOOGLE_API_KEY=AIzaSy...
+GOOGLE_CX=your_cx_id
+
+# --------------------------------------------
+# Vertex AI Search (se SEARCH_ENGINE=vertex)
+# --------------------------------------------
+VERTEX_PROJECT_ID=my-gcp-project
+VERTEX_DATASTORE_ID=kb-agentic-sources
+VERTEX_LOCATION=global
+GOOGLE_APPLICATION_CREDENTIALS=C:\path\to\service-account.json
+
+# --------------------------------------------
+# OCR/Vision (Google Cloud Vision API)
+# --------------------------------------------
+USE_VISION_API=false
+# Se true: Usa Vision API (OCR premium, $0.001/página)
+# Se false: Usa pdfplumber (grátis, bom para PDFs com texto nativo)
+
+# --------------------------------------------
+# GPT Allowlist (OpenAI)
+# --------------------------------------------
+USE_REAL_GPT_ALLOWLIST=true
+# Se true: GPT analisa conteúdo e sugere fontes contextuais (~$0.001)
+# Se false: Usa detecção de palavras-chave e placeholder adaptativo
+
+OPENAI_API_KEY=sk-...
+OPENAI_MODEL=gpt-4o-mini
+
+# --------------------------------------------
+# Outras configurações já existentes
+# --------------------------------------------
+QDRANT_URL=http://localhost:6333
+QDRANT_API_KEY=
+RAG_COLLECTION=kb_regulatory
+
+MYSQL_HOST=localhost
+MYSQL_PORT=3306
+MYSQL_DB=agentic_reg
+MYSQL_USER=root
+MYSQL_PASSWORD=
+
+CHUNK_MAX_TOKENS=512
+CHUNK_OVERLAP_TOKENS=50
+
+# ============================================
+# MODOS RECOMENDADOS
+# ============================================
+
+# Modo 1: DESENVOLVIMENTO (sem custos)
+# SEARCH_ENGINE=cse
+# USE_VISION_API=false (pdfplumber)
+# USE_REAL_GPT_ALLOWLIST=false (placeholder)
+
+# Modo 2: PRODUÇÃO ECONÔMICA (recomendado)
+# SEARCH_ENGINE=cse
+# USE_VISION_API=false (pdfplumber)
+# USE_REAL_GPT_ALLOWLIST=true (GPT real, ~$0.001)
+
+# Modo 3: PRODUÇÃO PREMIUM
+# SEARCH_ENGINE=vertex (allowlist dinâmico!)
+# USE_VISION_API=true (OCR premium)
+# USE_REAL_GPT_ALLOWLIST=true (GPT real)
+

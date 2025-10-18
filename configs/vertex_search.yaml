@@ -1,0 +1,49 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2025 Leopoldo Carvalho Correia de Lima
+
+# Google Vertex AI Search Configuration
+# Alternative to CSE with advanced features
+
+# Project configuration (resolved from .env)
+project_id: ${VERTEX_PROJECT_ID}
+location: ${VERTEX_LOCATION}  # e.g., global, us, eu
+datastore_id: ${VERTEX_DATASTORE_ID}
+
+# Search parameters
+max_results: 100
+timeout_seconds: 30
+
+# Serving configuration
+serving_config: default_config
+
+# Note: authority_domains are now managed dynamically via LLM plan
+# Legacy config kept for fallback compatibility
+authority_domains:
+  - .gov.br
+  - .edu
+  - .ac.uk
+
+# Keyword boosting (same as CSE)
+specificity_keywords:
+  high:
+    - "research"
+    - "study"
+    - "documentation"
+  medium:
+    - "guide"
+    - "tutorial"
+  low:
+    - "blog"
+    - "news"
+
+# Content type preferences
+type_preferences:
+  pdf: 1.5
+  html: 1.0
+
+# Anchorability markers
+anchor_markers:
+  - "Section"
+  - "Chapter"
+  - "Article"
+

@@ -1,0 +1,137 @@
+perfeito. segue um **PROMPT MESTRE** (em PT-BR) para você colar no GPT sempre que quiser transformar **qualquer texto cru** em **slides apresentáveis** — e que já sai **formatado como prompt para o Gamma.app**.
+Basta substituir os campos `{{...}}` e colar tudo numa mensagem só.
+
+---
+
+# PROMPT MESTRE — “TEXTO ➜ SLIDES (OUTPUT: PROMPT PARA GAMMA)”
+
+Você é um **roteirista de apresentações** e **instrutor**. Receberá um texto cru e deverá:
+
+1. **Entender o conteúdo** → organizar em narrativa clara.
+2. **Estruturar uma apresentação** com *ordem lógica* (abertura → desenvolvimento → fechamento).
+3. **Gerar como saída um PROMPT ÚNICO para o Gamma.app**, incluindo estilo visual, instruções de diagramação e prompts de imagens/fluxos.
+
+### Parâmetros (ajuste antes de rodar)
+
+* **Título da apresentação:** `{{TITULO}}`
+* **Público-alvo:** `{{PUBLICO}}` (ex.: executivos, time técnico, turma mista)
+* **Objetivo:** `{{OBJETIVO}}` (ex.: persuadir, ensinar, alinhar decisão)
+* **Duração alvo:** `{{DURACAO}}` (ex.: 20min, 60min, 3h)
+* **Nível técnico:** `{{NIVEL}}` (baixo/médio/alto)
+* **Tom:** `{{TOM}}` (ex.: professoral, direto, inspirador)
+* **Nº de slides (faixa):** `{{MIN}}–{{MAX}}` (ex.: 18–24)
+* **Preferências visuais:** `{{PALETA/ESTILO}}` (ex.: minimalista, dark, azul/cinza)
+* **Marcas/termos a preservar:** `{{GLOSSARIO}}` (se houver)
+
+### Texto de origem
+
+```
+{{TEXTO_CRU_AQUI}}
+```
+
+---
+
+## ENTREGÁVEL (GERAR EXATAMENTE NO FORMATO ABAIXO)
+
+**[PROMPT PARA GAMMA.APP — COPIAR E COLAR]**
+
+Título: {{TITULO}}
+
+Objetivo do deck (1 frase): {{OBJETIVO}}
+Público-alvo: {{PUBLICO}} — Nível: {{NIVEL}} — Duração: {{DURACAO}} — Tom: {{TOM}}
+
+### Estilo visual e diretrizes de diagramação
+
+* Tema: **minimalista executivo**, foco em legibilidade.
+* Paleta: {{PALETA/ESTILO}}. Fundo claro, contrastes fortes para títulos.
+* Tipografia: sem serifa; títulos 36–44pt; corpo 20–24pt; **máx. 6 bullets por slide**; **≤ 16 palavras por bullet**.
+* Ícones simples; evitar clipart.
+* Incluir **número de slide** e **seção** no rodapé.
+* Onde houver “(explicar em 1 frase)”, criar **nota do apresentador** com até 40–60 palavras.
+
+### Estrutura do deck
+
+1. **Capa** — Título + subtítulo (benefício em 1 linha) + autor/data.
+2. **Agenda** — 4–6 tópicos em ordem lógica.
+3. **Contexto/Problema** — “Por que importa?” (3 bullets).
+4. **Diagnóstico/Estado atual** — dores, riscos, oportunidades (até 5 bullets).
+5. **Conceitos-chave** — glossário compacto (tabela 2 colunas: termo | definição curta).
+6. **Arquitetura/Fluxo** — **gerar diagrama** (ver seção “Prompts de imagens e fluxos”).
+7. **Solução/Abordagem** — passos ou pilares (3–5 cartões).
+8. **Exemplo/Estudo de caso** — situação, ação, resultado (SAR).
+9. **Métricas de sucesso/KPIs** — 3–5 indicadores com meta.
+10. **Riscos e mitigação** — tabela: risco | impacto | mitigação.
+11. **Plano/Timeline** — fases e marcos (visual em 3–4 fases).
+12. **Recursos/Ferramentas** — lista com micro-descrições entre parênteses.
+13. **Call to Action** — próximos passos claros (3 bullets).
+14. **Q&A** — slide neutro.
+15. **Referências** — fontes e links (curtos).
+
+> **Observação:** ajuste o número total de slides para ficar entre **{{MIN}}–{{MAX}}** mantendo a progressão lógica.
+
+### Notas do apresentador (por seção)
+
+* Inserir **“Notas do apresentador:”** em cada slide com: intenção do slide, mensagem-chave, transição para o próximo.
+* Linguagem direta, “tell it like it is”.
+
+### Prompts de imagens e fluxos (para o Gamma gerar)
+
+* **Diagrama de fluxo principal:**
+  “Crie um fluxograma horizontal com raias (‘Contexto’, ‘Processo’, ‘Resultado’). Blocos com título em negrito e micro-explicação entre parênteses. Estilo minimalista, cores suaves, setas claras.”
+* **Arquitetura técnica (se houver):**
+  “Desenhe arquitetura em camadas (Ingestão → Processamento → Armazenamento → Exposição → Observabilidade). Cada bloco com tecnologias entre parênteses. Ícones simples, bordas suaves.”
+* **Timeline:**
+  “Linha do tempo com 4 fases, marcos (diamantes) e entregáveis por fase (até 3 por fase).”
+* **Dashboard KPI:**
+  “Quatro cards (KPI, valor, tendência), gráfico de barras de custo por componente, linha para evolução semanal.”
+
+### Regras de conteúdo
+
+* **Reescreva** o texto cru em **português claro**, sem jargão desnecessário.
+* Use **bullets ativos** (verbo no início).
+* **Evite** parágrafos longos; priorize listas, tabelas e diagramas.
+* **Padronize termos** com base em {{GLOSSARIO}} (se fornecido).
+* Se houver números, **verifique coerência** e **cap com unidade** (ex.: “≤ 3s”, “$ por 1k tokens”).
+* Onde couber, incluir **(entre parênteses)** uma **micro-explicação de termos**.
+
+### Blocos opcionais (incluir somente se o texto pedir)
+
+* **Canvas (AI/Lean/Business):** gerar quadro 1 página com perguntas-guia em cinza.
+* **FinOps/Unit Economics:** slide com fórmulas **C/100** e **C/1kP** e caixa de “alavancas de custo”.
+* **RAG/Lang/Crew:** matriz de decisão (quando usar o quê) + melhores práticas.
+* **Compliance/Ética:** riscos, princípios e políticas “não sei”.
+
+### Saída final
+
+* Produzir **o deck completo** conforme estrutura acima.
+* **Não** repetir o texto cru; **não** trazer marca d’água.
+* Entregar **apenas este prompt** (sem comentários adicionais) pronto para o Gamma.
+
+**[FIM DO PROMPT PARA GAMMA.APP]**
+
+---
+
+## CHECKLIST (para o GPT antes de encerrar)
+
+* [ ] Ordem narrativa coerente (abertura → meio → fecho)
+* [ ] Slides dentro da faixa {{MIN}}–{{MAX}}
+* [ ] Bullets ≤ 16 palavras; ≤ 6 bullets/slide
+* [ ] Notas do apresentador em todos os slides essenciais
+* [ ] Pelo menos 1 **diagrama** e 1 **timeline** gerados via prompt
+* [ ] Tabelas onde há comparações/definições
+* [ ] CTA claro e referências no final
+
+---
+
+### EXEMPLO DE USO (mini)
+
+* **TITULO:** “RAG + FinOps para Compliance”
+* **PUBLICO:** gestores e engenheiros
+* **OBJETIVO:** alinhar decisão de investimento
+* **DURACAO:** 30min
+* **NIVEL:** médio
+* **MIN–MAX:** 16–20
+* **PALETA/ESTILO:** azul/cinza, minimalista
+* **TEXTO_CRU:** cole aqui um dump de notas, bullets soltos ou um artigo
+
+Cole o prompt acima no GPT, ajuste os parâmetros, cole seu texto cru e **envie**. O GPT retornará **um único bloco** já pronto para colar no **Gamma.app**, com estrutura, estilo e prompts visuais.

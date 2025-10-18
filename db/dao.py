@@ -86,7 +86,43 @@ class SearchResultDAO:
         final_type: str = "unknown",
         fetch_status: Optional[str] = None,
     ) -> SearchResult:
-        """Create new search result with typing information."""
+        """Create new search result with typing information (with duplicate prevention)."""
+        # ✅ Check if URL already exists for this query_id
+        existing = session.execute(
+            select(SearchResult)
+            .where(SearchResult.query_id == query_id)
+            .where(SearchResult.url == url)
+        ).scalar_one_or_none()
+        
+        if existing:
+            # Update existing record instead of creating duplicate
+            existing.title = title or existing.title
+            existing.snippet = snippet or existing.snippet
+            existing.rank_position = rank_position
+            existing.score = score or existing.score
+            existing.content_type = content_type or existing.content_type
+            existing.last_modified = last_modified or existing.last_modified
+            existing.approved = approved
+            # Update typing fields
+            if http_content_type:
+                existing.http_content_type = http_content_type
+            if http_content_disposition:
+                existing.http_content_disposition = http_content_disposition
+            if url_ext:
+                existing.url_ext = url_ext
+            if detected_mime:
+                existing.detected_mime = detected_mime
+            if detected_ext:
+                existing.detected_ext = detected_ext
+            if final_type:
+                existing.final_type = final_type
+            if fetch_status:
+                existing.fetch_status = fetch_status
+            
+            session.flush()
+            return existing
+        
+        # Create new record
         result = SearchResult(
             query_id=query_id,
             url=url,
@@ -395,6 +431,7 @@ class ChunkManifestDAO:
         vector_status: str = "none",
         last_pushed_at: Optional[datetime] = None,
         last_pushed_collection: Optional[str] = None,
+        source_pipeline: str = "regular",
     ) -> ChunkManifest:
         """Upsert chunk manifest record."""
         manifest = ChunkManifestDAO.find_by_doc_hash(session, doc_hash)
@@ -416,6 +453,7 @@ class ChunkManifestDAO:
                 manifest.last_pushed_at = last_pushed_at
             if last_pushed_collection is not None:
                 manifest.last_pushed_collection = last_pushed_collection
+            manifest.source_pipeline = source_pipeline
             manifest.updated_at = datetime.utcnow()
         else:
             # Create new
@@ -431,6 +469,7 @@ class ChunkManifestDAO:
                 vector_status=vector_status,
                 last_pushed_at=last_pushed_at,
                 last_pushed_collection=last_pushed_collection,
+                source_pipeline=source_pipeline,
             )
             session.add(manifest)
         
@@ -479,6 +518,33 @@ class ChunkManifestDAO:
         """Get manifests by doc_hashes."""
         stmt = select(ChunkManifest).where(ChunkManifest.doc_hash.in_(doc_hashes))
         return list(session.scalars(stmt))
+    
+    @staticmethod
+    def get_chunk_preview(session: Session, doc_hash: str, max_chars: int = 500) -> Optional[str]:
+        """
+        Get preview of chunk text content.
+        
+        Args:
+            session: DB session
+            doc_hash: Document hash
+            max_chars: Maximum characters to return
+            
+        Returns:
+            Preview text or None
+        """
+        chunks = ChunkStoreDAO.get_chunks_by_doc_hash(session, doc_hash)
+        
+        if not chunks:
+            return None
+        
+        # Get first chunk text
+        first_chunk = chunks[0]
+        preview = first_chunk.text_content[:max_chars]
+        
+        if len(first_chunk.text_content) > max_chars:
+            preview += "..."
+        
+        return preview
 
 
 class ChunkStoreDAO:

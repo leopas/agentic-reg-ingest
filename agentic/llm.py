@@ -4,6 +4,7 @@
 """LLM wrapper for intelligent routing and PDF analysis."""
 
 import json
+import os
 import structlog
 from typing import TYPE_CHECKING, Any, Dict, List, Literal, Optional
 
@@ -460,6 +461,7 @@ VALORES RECOMENDADOS para quality_gates:
         self,
         plan: "Plan",
         candidates: List["CandidateSummary"],
+        session: Optional[Any] = None,
     ) -> "JudgeResponse":
         """
         Judge search candidates and propose new queries.
@@ -471,33 +473,62 @@ VALORES RECOMENDADOS para quality_gates:
         Returns:
             JudgeResponse with approved_urls, rejected, and new_queries
         """
-        system_prompt = """Você é um crítico rigoroso de fontes regulatórias.
+        system_prompt = f"""Você é um especialista em curadoria de fontes de informação confiáveis.
+
+OBJETIVO DA BUSCA:
+{plan.goal}
 
 TAREFA:
-Recebe candidatos (título/url/snippet/headers/score/final_type/anchor_signals) e um Plan (quality_gates).
-Devolva JSON estrito com:
-{
+Avaliar candidatos de busca e aprovar as fontes MAIS RELEVANTES e CONFIÁVEIS para o objetivo acima.
+
+FORMATO DE RESPOSTA (JSON puro):
+{{
   "approved_urls": [string],
-  "rejected": [{"url": string, "reason": string, "violations": [string]}],
+  "rejected": [{{"url": string, "reason": string, "violations": [string]}}],
   "new_queries": [string]
-}
+}}
+
+CRITÉRIOS DE APROVAÇÃO (priorize relevância e confiabilidade):
+
+1. RELEVÂNCIA AO OBJETIVO:
+   - O conteúdo contribui diretamente para o objetivo da busca?
+   - Título e snippet indicam profundidade sobre o tema?
+   - É uma fonte primária ou secundária confiável?
+
+2. CONFIABILIDADE DA FONTE:
+   - Site/domínio é autoridade reconhecida no assunto?
+   - Documentação oficial, paper acadêmico, ou instituição séria?
+   - Evite: blogs pessoais, clickbait, agregadores genéricos
+
+3. QUALIDADE DO CONTEÚDO:
+   - Tipo de documento adequado (pdf, html) conforme quality_gates
+   - Conteúdo substancial (não apenas links ou índices)
+   - Não é wrapper/redirect para outro documento
+
+4. ATUALIDADE (se aplicável ao domínio):
+   - Para temas que evoluem rápido (AI, tech): priorize < 2 anos
+   - Para temas estáveis (regulatório, histórico): aceite até {plan.quality_gates.max_age_years} anos
+   - Se data desconhecida: avaliar pela relevância do conteúdo
 
 CRITÉRIOS DE REJEIÇÃO:
-- Wrappers HTML (páginas que só linkam para PDF)
-- Blogs, notícias, ou fontes não-oficiais
-- Documentos desatualizados
-- Baixa relevância ao objetivo
-- Falta de marcadores estruturais (Art., Anexo, Tabela)
+- Irrelevante ao objetivo da busca
+- Fonte não confiável (blogs pessoais, spam, propaganda)
+- Wrapper/índice sem conteúdo substancial
+- Paywall sem acesso ao conteúdo
+- Qualidade muito baixa (score < {plan.quality_gates.min_score})
 
-SUGESTÕES DE QUERIES:
-- Se faltam anexos específicos, sugira "Anexo X RN Y"
-- Se faltam tabelas, sugira "Tabela TUSS" ou similar
-- Se faltam resoluções, sugira "RN [número]"
-- Máximo 3 novas queries por iteração
+SUGESTÕES DE NOVAS QUERIES:
+- Analise GAPS: o que ainda falta para cobrir o objetivo?
+- Sugira queries ESPECÍFICAS para preencher lacunas
+- Máximo 3 queries novas
+- Base-se no conteúdo dos snippets dos candidatos
+- Se já tem fontes suficientes, não sugira novas queries
 
-IMPORTANTE:
-- Apenas URLs em approved_urls que realmente atendem aos quality_gates
-- Seja conservador: na dúvida, rejeite
+INSTRUÇÕES IMPORTANTES:
+- APROVE conteúdo útil, mesmo que não seja "perfeito"
+- NÃO exija marcadores estruturais específicos (Art., Anexo) a menos que seja relevante ao domínio
+- PRIORIZE relevância e confiabilidade sobre formato
+- Seja GENEROSO com fontes acadêmicas, documentação oficial, e papers
 - Reasons devem ser específicas e em português"""
 
         # Prepare user content
@@ -529,21 +560,135 @@ IMPORTANTE:
         ]
         
         try:
-            logger.info("llm_judge_start", candidates_count=len(candidates))
+            # ✅ CACHE CHECK: Verificar decisões já tomadas
+            import hashlib
+            plan_goal_hash = hashlib.sha256(plan.goal.encode()).hexdigest()
             
-            response = self._call_chat_completion(
-                messages,
-                response_format={"type": "json_object"},
-            )
+            cached_decisions = {}
+            needs_judgment = []
             
-            judge_dict = json.loads(response)
+            if session:
+                from db.judge_cache_dao import JudgeCacheDAO
+                
+                # Get batch cache
+                urls = [c.url for c in candidates]
+                cached_decisions = JudgeCacheDAO.get_batch(session, urls, plan_goal_hash)
+                
+                # Separate cached vs needs judgment
+                for candidate in candidates:
+                    if candidate.url in cached_decisions:
+                        pass  # Will use cache
+                    else:
+                        needs_judgment.append(candidate)
+                
+                logger.info(
+                    "judge_cache_check",
+                    total=len(candidates),
+                    cached=len(cached_decisions),
+                    needs_judgment=len(needs_judgment)
+                )
+            else:
+                needs_judgment = candidates
+                logger.info("judge_no_cache", msg="Session not provided, skipping cache")
+            
+            # If all cached, skip LLM call
+            if not needs_judgment:
+                logger.info("judge_all_cached", msg="All decisions from cache")
+                judge_dict = {
+                    "approved_urls": [],
+                    "rejected": [],
+                    "new_queries": []
+                }
+            else:
+                # Update user content with only URLs that need judgment
+                user_content["candidates"] = [
+                    {
+                        "url": c.url,
+                        "title": c.title,
+                        "snippet": c.snippet,
+                        "score": c.score,
+                        "final_type": c.final_type,
+                        "anchor_signals": c.anchor_signals,
+                        "last_modified": c.headers.get("Last-Modified"),
+                    }
+                    for c in needs_judgment
+                ]
+                
+                logger.info("llm_judge_start", candidates_count=len(needs_judgment))
+                
+                response = self._call_chat_completion(
+                    messages,
+                    response_format={"type": "json_object"},
+                )
+                
+                judge_dict = json.loads(response)
+                
+                # ✅ CACHE SAVE: Salvar novas decisões
+                if session:
+                    from db.judge_cache_dao import JudgeCacheDAO
+                    import os
+                    
+                    ttl_days = int(os.getenv("JUDGE_CACHE_TTL_DAYS", "30"))
+                    
+                    # Save approved
+                    for url in judge_dict.get("approved_urls", []):
+                        try:
+                            JudgeCacheDAO.set(
+                                session,
+                                url=url,
+                                decision="approved",
+                                plan_goal_hash=plan_goal_hash,
+                                ttl_days=ttl_days,
+                            )
+                        except Exception as e:
+                            logger.warning("judge_cache_save_failed", url=url[:50], error=str(e))
+                    
+                    # Save rejected
+                    for r in judge_dict.get("rejected", []):
+                        if isinstance(r, dict):
+                            try:
+                                JudgeCacheDAO.set(
+                                    session,
+                                    url=r.get("url", ""),
+                                    decision="rejected",
+                                    plan_goal_hash=plan_goal_hash,
+                                    ttl_days=ttl_days,
+                                    reason=r.get("reason"),
+                                    violations=r.get("violations", []),
+                                )
+                            except Exception as e:
+                                logger.warning("judge_cache_save_failed", error=str(e))
+                    
+                    session.flush()
+                    logger.info("judge_cache_saved", approved=len(judge_dict.get("approved_urls", [])))
+            
+            # ✅ Combine cached + new decisions
+            approved_urls_new = judge_dict.get("approved_urls", [])
+            rejected_new = judge_dict.get("rejected", [])
             
             # Import here to avoid circular dependency
             from agentic.schemas import JudgeResponse, RejectedSummary
             
+            # Add cached approved URLs
+            for url, cache in cached_decisions.items():
+                if cache.decision == "approved":
+                    approved_urls_new.append(url)
+            
             # Ensure rejected has proper structure
             rejected_list = []
-            for r in judge_dict.get("rejected", []):
+            
+            # Add cached rejected
+            for url, cache in cached_decisions.items():
+                if cache.decision == "rejected":
+                    violations = json.loads(cache.violations) if cache.violations else []
+                    rejected_list.append(RejectedSummary(
+                        url=url,
+                        reason=cache.reason or "Cached rejection",
+                        violations=violations,
+                    ))
+            
+            # Add new rejected
+            for r in rejected_new:
                 if isinstance(r, dict):
                     rejected_list.append(RejectedSummary(**r))
                 else:
@@ -555,7 +700,7 @@ IMPORTANTE:
                     ))
             
             judge_response = JudgeResponse(
-                approved_urls=judge_dict.get("approved_urls", []),
+                approved_urls=approved_urls_new,
                 rejected=rejected_list,
                 new_queries=judge_dict.get("new_queries", []),
             )

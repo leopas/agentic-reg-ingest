@@ -136,10 +136,12 @@ class AgenticSearchController:
                     query_spec = next((q for q in plan.queries if q.q == query), None)
                     k = query_spec.k if query_spec else 10
                     
+                    # ✅ Passa allow_domains do plan para CSE (dynamic allow-list!)
                     items = self.cse.search_all(
                         query=query,
                         max_results=k,
                         results_per_page=10,
+                        include_domains=plan.allow_domains,  # ← DO PLAN DO GPT!
                     )
                     
                     cse_calls_count += 1
@@ -207,9 +209,9 @@ class AgenticSearchController:
                 rejected=len(rejected_this_iter),
             )
             
-            # 4b. LLM judge (semantic)
+            # 4b. LLM judge (semantic) - with cache support
             if filtered_candidates:
-                judge_response = self.llm.judge_candidates(plan, filtered_candidates)
+                judge_response = self.llm.judge_candidates(plan, filtered_candidates, session=session)
                 
                 # Collect approved
                 for url in judge_response.approved_urls:

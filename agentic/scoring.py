@@ -8,21 +8,23 @@ from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 from urllib.parse import urlparse
 
-from agentic.normalize import is_gov_domain
+from agentic.normalize import is_gov_domain, extract_domain
 
 
 class ResultScorer:
     """Score search results based on multiple factors."""
     
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: Dict[str, Any], authority_domains: Optional[List[str]] = None):
         """
         Initialize scorer with configuration.
         
         Args:
             config: Configuration dict from cse.yaml
+            authority_domains: Optional override for authority domains (from LLM plan)
         """
         self.config = config
-        self.authority_domains = config.get("authority_domains", [])
+        # Use provided authority_domains or fallback to config
+        self.authority_domains = authority_domains or config.get("authority_domains", [])
         self.specificity_keywords = config.get("specificity_keywords", {})
         self.type_preferences = config.get("type_preferences", {})
         self.anchor_markers = config.get("anchor_markers", [])
@@ -73,17 +75,40 @@ class ResultScorer:
         return round(score, 4)
     
     def _score_authority(self, url: str) -> float:
-        """Score based on domain authority."""
+        """
+        Score based on domain authority.
+        
+        Uses authority_domains from LLM plan (if provided) or config fallback.
+        """
         domain = urlparse(url).netloc.lower()
         
-        if is_gov_domain(domain):
-            return 1.0
-        
-        # Check configured authority domains
+        # Check if domain matches any authority domain from plan/config
         for auth_domain in self.authority_domains:
-            if domain.endswith(auth_domain):
+            auth_domain_clean = auth_domain.lower().strip()
+            
+            # Exact match
+            if domain == auth_domain_clean:
                 return 1.0
+            
+            # Subdomain match (e.g., "blog.openai.com" matches "openai.com")
+            if domain.endswith(f".{auth_domain_clean}"):
+                return 1.0
+            
+            # Parent domain match (e.g., "openai.com" matches ".openai.com")
+            if auth_domain_clean.startswith(".") and domain.endswith(auth_domain_clean):
+                return 1.0
+            
+            # Partial match for patterns like "*.edu"
+            if "*" in auth_domain_clean:
+                pattern = auth_domain_clean.replace("*", ".*").replace(".", r"\.")
+                if re.search(pattern, domain):
+                    return 1.0
         
+        # Legacy: Still give boost to gov domains (general case)
+        if is_gov_domain(domain):
+            return 0.9
+        
+        # No match: neutral score
         return 0.3
     
     def _score_freshness(self, last_modified: Optional[datetime]) -> float:

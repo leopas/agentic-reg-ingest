@@ -16,6 +16,8 @@ from pydantic import BaseModel
 
 from apps.api.middleware import LoggingMiddleware
 from apps.api.routes_chat import router as chat_router
+from apps.api.routes_vision_enrichment import router as vision_router
+from apps.api.routes_search import router as search_router
 from common.env_readers import load_yaml_with_env
 from common.settings import settings
 from db.session import DatabaseSession
@@ -56,6 +58,8 @@ app.add_middleware(LoggingMiddleware)
 
 # Include routers
 app.include_router(chat_router)
+app.include_router(vision_router)
+app.include_router(search_router)
 
 # Mount static files for UI
 ui_static_dir = Path(__file__).parent.parent / "ui" / "static"
@@ -378,7 +382,8 @@ async def run_agentic(request: RunAgenticRequest):
             max_tokens=agentic_config["agentic"]["llm"]["max_tokens"],
         )
         
-        scorer = ResultScorer(cse_config)
+        # Get plan first to extract allow_domains
+        plan = None
         
         # Get plan
         db_session = DatabaseSession()
@@ -395,6 +400,12 @@ async def run_agentic(request: RunAgenticRequest):
                 plan = Plan(**plan_dict)
             else:
                 raise HTTPException(status_code=400, detail="Must provide plan_id or plan_override")
+            
+            # ✅ Create scorer with allow_domains from plan (not hardcoded config)
+            scorer = ResultScorer(
+                cse_config,
+                authority_domains=plan.allow_domains  # ← Domínios do plan!
+            )
             
             # Run agentic search
             result = run_agentic_search(plan, session, cse, llm, scorer)
@@ -915,6 +926,8 @@ async def root():
         "ui": {
             "agentic_console": "http://localhost:8000/ui",
             "rag_chat": "http://localhost:8000/chat",
+            "vision_enrichment": "http://localhost:8000/ui/vision-enrichment",
+            "vision_admin": "http://localhost:8000/ui/vision-admin",
         },
         "endpoints": {
             "health": "/health",

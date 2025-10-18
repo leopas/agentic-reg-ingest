@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2025 Leopoldo Carvalho Correia de Lima
+
+# Vision Enrichment Pipeline Configuration
+
+# LLM settings for allowlist planning
+llm:
+  model: gpt-4o-mini
+  temperature: 0
+  max_tokens: 3000
+
+# Scraper settings
+scraper:
+  timeout: 20
+  user_agent: "Mozilla/5.0 (compatible; AgenticRegIngest/2.0)"
+
+# Output paths
+output:
+  jsonl_dir: data/output/jsonl
+  txt_base_dir: data/output/enrichment_txt
+
+# Chunker settings (reuse from ingest config)
+chunker:
+  max_tokens: 512
+  overlap_tokens: 50
+  min_tokens: 100
+
+# Upload settings
+upload:
+  max_file_size_mb: 50
+  allowed_extensions: [".pdf", ".pptx", ".ppt", ".zip"]
+  upload_dir: data/uploads
+
+# Pipeline defaults
+pipeline:
+  timeout_per_stage: 300  # seconds
+  retry_count: 2
+
